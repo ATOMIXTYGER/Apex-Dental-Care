@@ -30,7 +30,7 @@ export default function Appointments() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedDentist, setSelectedDentist] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -66,29 +66,41 @@ export default function Appointments() {
 
   // Date controls
   const handlePrevDay = () => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() - 1);
-    setSelectedDate(d.toISOString().split('T')[0]);
+    const base = selectedDate ? new Date(selectedDate) : new Date();
+    base.setDate(base.getDate() - 1);
+    setSelectedDate(base.toISOString().split('T')[0]);
   };
 
   const handleNextDay = () => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + 1);
-    setSelectedDate(d.toISOString().split('T')[0]);
+    const base = selectedDate ? new Date(selectedDate) : new Date();
+    base.setDate(base.getDate() + 1);
+    setSelectedDate(base.toISOString().split('T')[0]);
   };
 
   const handleToday = () => {
     setSelectedDate(new Date().toISOString().split('T')[0]);
   };
 
-  // Filter list by patient name or reason search
+  const handleAllDates = () => {
+    setSelectedDate('');
+  };
+
+  // Filter list by patient name, dentist, code, or reason search
   const filteredAppointments = appointments.filter((app: Appointment) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const patientName = `${app.patient?.first_name || ''} ${app.patient?.last_name || ''}`.toLowerCase();
-    const patientCode = app.patient?.patient_id?.toLowerCase() || '';
-    const reason = app.reason?.toLowerCase() || '';
-    return patientName.includes(q) || patientCode.includes(q) || reason.includes(q);
+    const patientName = (app.patient_name || `${app.patient?.first_name || ''} ${app.patient?.last_name || ''}`).toLowerCase();
+    const patientCode = (app.patient_code || app.patient?.patient_id || '').toLowerCase();
+    const dentistName = (app.dentist_name || app.dentist?.full_name || '').toLowerCase();
+    const apptType = (app.appointment_type_name || app.appointment_type || '').toString().toLowerCase();
+    const reason = (app.reason || '').toLowerCase();
+    return (
+      patientName.includes(q) ||
+      patientCode.includes(q) ||
+      dentistName.includes(q) ||
+      apptType.includes(q) ||
+      reason.includes(q)
+    );
   });
 
   // Count stats
@@ -175,32 +187,48 @@ export default function Appointments() {
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Date Selector Navigation */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handlePrevDay}
-              className="p-2 border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-600"
-              title="Previous Day"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={handleNextDay}
-              className="p-2 border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-600"
-              title="Next Day"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={handlePrevDay}
+                className="p-2 border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-600 transition"
+                title="Previous Day"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleNextDay}
+                className="p-2 border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-600 transition"
+                title="Next Day"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
             <button
               onClick={handleToday}
-              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                selectedDate === new Date().toISOString().split('T')[0]
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
             >
               Today
+            </button>
+            <button
+              onClick={handleAllDates}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                !selectedDate
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              All Dates
             </button>
           </div>
 
@@ -241,7 +269,7 @@ export default function Appointments() {
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search patient or reason..."
+                placeholder="Search patient, dentist, reason..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-48 sm:w-60"
@@ -297,45 +325,47 @@ export default function Appointments() {
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center text-slate-900 font-semibold">
                         <Clock className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />
-                        {app.start_time.substring(0, 5)} - {app.end_time.substring(0, 5)}
+                        {(app.start_time || '').substring(0, 5)} - {(app.end_time || '').substring(0, 5)}
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5">{app.appointment_date}</div>
                     </td>
 
                     {/* Patient */}
                     <td className="py-3.5 px-4">
-                      {app.patient ? (
-                        <div>
-                          <Link
-                            to={`/patients/${app.patient_id}`}
-                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center"
-                          >
-                            {app.patient.first_name} {app.patient.last_name}
-                          </Link>
-                          <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                            <span className="font-mono">{app.patient.patient_id}</span>
-                            {app.patient.phone && (
-                              <span className="flex items-center text-slate-400">
-                                <Phone className="w-3 h-3 mr-0.5" /> {app.patient.phone}
-                              </span>
-                            )}
-                          </div>
+                      <div>
+                        <Link
+                          to={`/patients/${app.patient_id}`}
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                        >
+                          {app.patient_name || (app.patient ? `${app.patient.first_name} ${app.patient.last_name}` : `Patient #${app.patient_id}`)}
+                        </Link>
+                        <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                          <span className="font-mono font-medium text-slate-600">
+                            {app.patient_code || app.patient?.patient_id || `ID #${app.patient_id}`}
+                          </span>
+                          {(app.patient?.phone) && (
+                            <span className="flex items-center text-slate-400">
+                              <Phone className="w-3 h-3 mr-0.5" /> {app.patient.phone}
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        <span className="text-slate-400">ID #{app.patient_id}</span>
-                      )}
+                      </div>
                     </td>
 
                     {/* Dentist */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="text-slate-800 font-medium">{app.dentist?.full_name || 'Assigned Dentist'}</div>
-                      <div className="text-xs text-slate-500">{app.dentist?.dentist_profile?.specialization || 'General Dentist'}</div>
+                      <div className="text-slate-800 font-medium">
+                        {app.dentist_name || app.dentist?.full_name || 'Assigned Dentist'}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {app.dentist?.dentist_profile?.specialization || 'Dental Specialist'}
+                      </div>
                     </td>
 
                     {/* Type & Reason */}
                     <td className="py-3.5 px-4 max-w-xs">
                       <div className="inline-block px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700 capitalize">
-                        {app.appointment_type.replace('_', ' ')}
+                        {(app.appointment_type_name || app.appointment_type || 'General Consultation').toString().replace(/_/g, ' ')}
                       </div>
                       {app.reason && (
                         <div className="text-xs text-slate-600 mt-1 truncate" title={app.reason}>
@@ -421,7 +451,11 @@ export default function Appointments() {
         <AppointmentModal
           isOpen={isBookModalOpen}
           onClose={() => setIsBookModalOpen(false)}
-          defaultDate={selectedDate}
+          defaultDate={selectedDate || new Date().toISOString().split('T')[0]}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['appointments'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+          }}
         />
       )}
 
@@ -431,6 +465,7 @@ export default function Appointments() {
           isOpen={!!activeAppointmentForVisit}
           onClose={() => setActiveAppointmentForVisit(null)}
           patientId={activeAppointmentForVisit.patient_id}
+          patientName={activeAppointmentForVisit.patient_name}
           appointmentId={activeAppointmentForVisit.id}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['appointments'] });

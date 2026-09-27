@@ -14,12 +14,12 @@ export interface User {
 
 export interface DentistProfile {
   id: number;
-  user_id: number;
+  user_id?: number;
   license_number: string;
   specialization: string;
   qualifications?: string;
   cabin_number?: string;
-  is_active: boolean;
+  is_active?: boolean;
 }
 
 export interface MedicalHistory {
@@ -139,6 +139,7 @@ export interface ToothCondition {
   patient_id: number;
   tooth_number: number;
   current_condition: ToothConditionType;
+  condition?: ToothConditionType;
   severity?: 'none' | 'mild' | 'moderate' | 'severe';
   surfaces?: string;
   notes?: string;

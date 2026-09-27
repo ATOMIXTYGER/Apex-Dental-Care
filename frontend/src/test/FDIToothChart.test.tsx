@@ -5,11 +5,11 @@ import { ToothCondition } from '../types';
 
 describe('FDIToothChart Component', () => {
   const mockTeeth: Record<number, ToothCondition> = {
-    11: { id: 1, patient_id: 1, tooth_number: 11, condition: 'healthy', updated_at: '2026-01-01' },
-    16: { id: 2, patient_id: 1, tooth_number: 16, condition: 'caries', severity: 'moderate', updated_at: '2026-01-01' },
-    21: { id: 3, patient_id: 1, tooth_number: 21, condition: 'filled', updated_at: '2026-01-01' },
-    36: { id: 4, patient_id: 1, tooth_number: 36, condition: 'root_canal', updated_at: '2026-01-01' },
-    48: { id: 5, patient_id: 1, tooth_number: 48, condition: 'missing', updated_at: '2026-01-01' },
+    11: { id: 1, patient_id: 1, tooth_number: 11, condition: 'healthy', current_condition: 'healthy', updated_at: '2026-01-01' },
+    16: { id: 2, patient_id: 1, tooth_number: 16, condition: 'caries', current_condition: 'caries', severity: 'moderate', updated_at: '2026-01-01' },
+    21: { id: 3, patient_id: 1, tooth_number: 21, condition: 'filled', current_condition: 'filled', updated_at: '2026-01-01' },
+    36: { id: 4, patient_id: 1, tooth_number: 36, condition: 'root_canal', current_condition: 'root_canal', updated_at: '2026-01-01' },
+    48: { id: 5, patient_id: 1, tooth_number: 48, condition: 'missing', current_condition: 'missing', updated_at: '2026-01-01' },
   };
 
   it('renders anatomical jaws (Maxilla and Mandible)', () => {
