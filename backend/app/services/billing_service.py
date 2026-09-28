@@ -132,7 +132,7 @@ class BillingService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
                     "code": "OVERPAYMENT_NOT_ALLOWED",
-                    "message": f"Payment amount (${pay_amount:.2f}) exceeds current outstanding balance (${invoice.balance:.2f})."
+                    "message": f"Payment amount (₹{pay_amount:.2f}) exceeds current outstanding balance (₹{invoice.balance:.2f})."
                 }
             )
 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, CreditCard, DollarSign } from 'lucide-react';
+import { X, CreditCard, IndianRupee } from 'lucide-react';
 import { Invoice } from '../../types';
 import { billingApi } from '../../api/billing';
+import { formatINR } from '../../utils/formatters';
 
 interface PaymentModalProps {
   invoice: Invoice;
@@ -17,7 +18,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onSuccess,
 }) => {
   const [amount, setAmount] = useState<number>(Number(invoice.balance) || 0);
-  const [method, setMethod] = useState<'cash' | 'card' | 'upi' | 'bank_transfer' | 'other'>('card');
+  const [method, setMethod] = useState<'cash' | 'card' | 'upi' | 'bank_transfer' | 'other'>('upi');
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -33,7 +34,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       return;
     }
     if (amount > invoice.balance) {
-      setError(`Payment cannot exceed outstanding balance of $${Number(invoice.balance).toFixed(2)}`);
+      setError(`Payment cannot exceed outstanding balance of ${formatINR(invoice.balance)}`);
       return;
     }
 
@@ -64,7 +65,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-600 flex items-center justify-center font-bold">
-              <DollarSign className="w-4 h-4" />
+              <IndianRupee className="w-4 h-4" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-800">Record Payment</h2>
@@ -88,20 +89,20 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
             <div>
               <p className="text-slate-500">Invoice Total:</p>
-              <p className="font-bold text-slate-800">${Number(invoice.total).toFixed(2)}</p>
+              <p className="font-bold text-slate-800">{formatINR(invoice.total)}</p>
             </div>
             <div>
               <p className="text-slate-500">Paid So Far:</p>
-              <p className="font-bold text-emerald-600">${Number(invoice.paid_amount).toFixed(2)}</p>
+              <p className="font-bold text-emerald-600">{formatINR(invoice.paid_amount)}</p>
             </div>
             <div className="text-right">
               <p className="text-slate-500">Outstanding Balance:</p>
-              <p className="font-bold text-red-600 text-sm">${Number(invoice.balance).toFixed(2)}</p>
+              <p className="font-bold text-red-600 text-sm">{formatINR(invoice.balance)}</p>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Payment Amount ($) *</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Payment Amount (₹) *</label>
             <input
               type="number"
               step="0.01"
@@ -121,10 +122,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               onChange={(e) => setMethod(e.target.value as any)}
               className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
+              <option value="upi">UPI / Instant Mobile (GPay, PhonePe, Paytm)</option>
               <option value="card">Credit / Debit Card</option>
               <option value="cash">Cash</option>
-              <option value="upi">UPI / Instant Mobile</option>
-              <option value="bank_transfer">Bank Wire Transfer</option>
+              <option value="bank_transfer">Net Banking / NEFT / IMPS</option>
               <option value="other">Insurance / Other</option>
             </select>
           </div>

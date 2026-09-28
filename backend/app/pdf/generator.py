@@ -232,8 +232,8 @@ def generate_invoice_pdf(invoice, patient) -> bytes:
             Paragraph("<b>#</b>", bold_style),
             Paragraph("<b>Item / Procedure Description</b>", bold_style),
             Paragraph("<b>Qty</b>", bold_style),
-            Paragraph("<b>Unit Price ($)</b>", bold_style),
-            Paragraph("<b>Total ($)</b>", bold_style)
+            Paragraph("<b>Unit Price (₹)</b>", bold_style),
+            Paragraph("<b>Total (₹)</b>", bold_style)
         ]
     ]
 
@@ -260,12 +260,12 @@ def generate_invoice_pdf(invoice, patient) -> bytes:
 
     # Totals breakdown
     totals_data = [
-        [Paragraph("<b>Subtotal:</b>", normal_style), Paragraph(f"${invoice.subtotal:.2f}", bold_style)],
-        [Paragraph("<b>Discount:</b>", normal_style), Paragraph(f"-${invoice.discount:.2f}", normal_style)],
-        [Paragraph("<b>Tax:</b>", normal_style), Paragraph(f"${invoice.tax:.2f}", normal_style)],
-        [Paragraph("<b>Grand Total:</b>", bold_style), Paragraph(f"<b>${invoice.total:.2f}</b>", bold_style)],
-        [Paragraph("<b>Amount Paid:</b>", normal_style), Paragraph(f"${invoice.paid_amount:.2f}", normal_style)],
-        [Paragraph("<b>Balance Due:</b>", bold_style), Paragraph(f"<font color='#dc2626'><b>${invoice.balance:.2f}</b></font>", bold_style)]
+        [Paragraph("<b>Subtotal:</b>", normal_style), Paragraph(f"₹{invoice.subtotal:.2f}", bold_style)],
+        [Paragraph("<b>Discount:</b>", normal_style), Paragraph(f"-₹{invoice.discount:.2f}", normal_style)],
+        [Paragraph("<b>GST (Tax):</b>", normal_style), Paragraph(f"₹{invoice.tax:.2f}", normal_style)],
+        [Paragraph("<b>Grand Total:</b>", bold_style), Paragraph(f"<b>₹{invoice.total:.2f}</b>", bold_style)],
+        [Paragraph("<b>Amount Paid:</b>", normal_style), Paragraph(f"₹{invoice.paid_amount:.2f}", normal_style)],
+        [Paragraph("<b>Balance Due:</b>", bold_style), Paragraph(f"<font color='#dc2626'><b>₹{invoice.balance:.2f}</b></font>", bold_style)]
     ]
     t_totals = Table(totals_data, colWidths=[120, 100])
     t_totals.setStyle(TableStyle([
@@ -284,14 +284,14 @@ def generate_invoice_pdf(invoice, patient) -> bytes:
     if invoice.payments:
         story.append(Paragraph("<b>Recorded Payments:</b>", bold_style))
         pay_rows = [
-            [Paragraph("<b>Date</b>", bold_style), Paragraph("<b>Method</b>", bold_style), Paragraph("<b>Reference</b>", bold_style), Paragraph("<b>Amount</b>", bold_style)]
+            [Paragraph("<b>Date</b>", bold_style), Paragraph("<b>Method</b>", bold_style), Paragraph("<b>Reference</b>", bold_style), Paragraph("<b>Amount (₹)</b>", bold_style)]
         ]
         for p in invoice.payments:
             pay_rows.append([
                 Paragraph(p.payment_date.strftime('%d-%b-%Y %H:%M'), normal_style),
                 Paragraph(p.payment_method.upper(), normal_style),
                 Paragraph(p.transaction_reference or '-', normal_style),
-                Paragraph(f"${p.amount:.2f}", normal_style)
+                Paragraph(f"₹{p.amount:.2f}", normal_style)
             ])
         t_pay = Table(pay_rows, colWidths=[140, 100, 180, 120])
         t_pay.setStyle(TableStyle([

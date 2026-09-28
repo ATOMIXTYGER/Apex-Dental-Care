@@ -3,6 +3,7 @@ import { X, Plus, Trash2, Activity } from 'lucide-react';
 import { ProcedureCatalog } from '../../types';
 import { treatmentsApi } from '../../api/treatments';
 import { useAuth } from '../../context/AuthContext';
+import { formatINR } from '../../utils/formatters';
 
 interface TreatmentPlanModalProps {
   patientId?: number;
@@ -187,7 +188,7 @@ export const TreatmentPlanModal: React.FC<TreatmentPlanModalProps> = ({
                     >
                       {catalog.map((c) => (
                         <option key={c.id} value={c.name}>
-                          {c.name} (${c.default_cost})
+                          {c.name} ({formatINR(c.default_cost)})
                         </option>
                       ))}
                     </select>
@@ -209,7 +210,7 @@ export const TreatmentPlanModal: React.FC<TreatmentPlanModalProps> = ({
                   </div>
 
                   <div className="col-span-3">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Est. Cost ($)</label>
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Est. Cost (₹)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -241,7 +242,7 @@ export const TreatmentPlanModal: React.FC<TreatmentPlanModalProps> = ({
           {/* Plan Summary */}
           <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl flex items-center justify-between">
             <span className="text-xs font-bold text-teal-900">Total Estimated Cost:</span>
-            <span className="text-sm font-extrabold text-teal-700">${totalCost.toFixed(2)}</span>
+            <span className="text-sm font-extrabold text-teal-700">{formatINR(totalCost)}</span>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">

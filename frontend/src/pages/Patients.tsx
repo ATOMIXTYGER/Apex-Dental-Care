@@ -5,6 +5,7 @@ import { Patient, PaginatedResult } from '../types';
 import { patientsApi } from '../api/patients';
 import { PatientFormModal } from '../components/patients/PatientFormModal';
 import { useAuth } from '../context/AuthContext';
+import { formatDateIN } from '../utils/formatters';
 
 export const Patients: React.FC = () => {
   const [data, setData] = useState<PaginatedResult<Patient> | null>(null);
@@ -124,7 +125,7 @@ export const Patients: React.FC = () => {
                         {patient.first_name} {patient.last_name}
                       </td>
                       <td className="py-4 px-6 text-slate-500">
-                        {birthDate.toLocaleDateString()} ({age} yrs)
+                        {formatDateIN(birthDate)} ({age} yrs)
                       </td>
                       <td className="py-4 px-6">{patient.gender}</td>
                       <td className="py-4 px-6 text-slate-600 font-mono">{patient.phone}</td>
@@ -134,7 +135,7 @@ export const Patients: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-slate-400 text-[11px]">
-                        {new Date(patient.created_at).toLocaleDateString()}
+                        {formatDateIN(patient.created_at)}
                       </td>
                       <td className="py-4 px-6 text-right">
                         <button

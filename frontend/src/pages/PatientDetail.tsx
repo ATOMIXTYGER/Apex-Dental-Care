@@ -18,8 +18,9 @@ import {
   Plus,
   ArrowLeft,
   CheckCircle2,
-  DollarSign
+  IndianRupee
 } from 'lucide-react';
+import { formatINR, formatDateIN, formatDateTimeIN } from '../utils/formatters';
 import {
   Patient,
   DentalChartDetail,
@@ -200,7 +201,7 @@ export const PatientDetail: React.FC = () => {
                 )}
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  DOB: {patient.date_of_birth}
+                  DOB: {formatDateIN(patient.date_of_birth)}
                 </span>
                 {patient.blood_group && (
                   <span className="px-1.5 py-0.5 bg-rose-50 text-rose-700 font-bold rounded border border-rose-200 text-[10px]">
@@ -339,7 +340,7 @@ export const PatientDetail: React.FC = () => {
                   <div className="flex items-start justify-between border-b border-slate-100 pb-3">
                     <div>
                       <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded">
-                        Visit Date: {v.visit_date}
+                        Visit Date: {formatDateIN(v.visit_date)}
                       </span>
                       <h3 className="text-sm font-bold text-slate-900 mt-1">
                         Diagnosis: {v.diagnosis || 'General Examination'}
@@ -349,7 +350,7 @@ export const PatientDetail: React.FC = () => {
 
                     <div className="flex gap-4 text-xs font-medium text-slate-600">
                       {v.vitals_blood_pressure && (
-                        <span>BP: <b>{v.vitals_blood_pressure}</b></span>
+                        <span>BP: <b>{v.vitals_blood_pressure} {v.vitals_blood_pressure.includes('mmHg') ? '' : 'mmHg'}</b></span>
                       )}
                       {v.vitals_pulse && (
                         <span>Pulse: <b>{v.vitals_pulse} bpm</b></span>
@@ -421,13 +422,13 @@ export const PatientDetail: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Supervising Doctor: {p.dentist_name || 'Dr. In-Charge'} • Created {new Date(p.created_at).toLocaleDateString()}
+                        Supervising Doctor: {p.dentist_name || 'Dr. In-Charge'} • Created {formatDateIN(p.created_at)}
                       </p>
                     </div>
 
                     <div className="text-right">
                       <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Estimated</p>
-                      <p className="text-base font-extrabold text-teal-700">${Number(p.estimated_total).toFixed(2)}</p>
+                      <p className="text-base font-extrabold text-teal-700">{formatINR(p.estimated_total)}</p>
                     </div>
                   </div>
 
@@ -439,7 +440,7 @@ export const PatientDetail: React.FC = () => {
                           <th className="py-2 px-4">Procedure</th>
                           <th className="py-2 px-4">Tooth #</th>
                           <th className="py-2 px-4">Status</th>
-                          <th className="py-2 px-4 text-right">Cost ($)</th>
+                          <th className="py-2 px-4 text-right">Cost (₹)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -461,7 +462,7 @@ export const PatientDetail: React.FC = () => {
                               </span>
                             </td>
                             <td className="py-2.5 px-4 text-right font-mono font-bold">
-                              ${Number(t.estimated_cost).toFixed(2)}
+                              {formatINR(t.estimated_cost)}
                             </td>
                           </tr>
                         ))}
@@ -599,14 +600,14 @@ export const PatientDetail: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-1">
-                        Issued: {inv.issue_date} • Due: {inv.due_date}
+                        Issued: {formatDateIN(inv.issue_date)} • Due: {formatDateIN(inv.due_date)}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <p className="text-xs text-slate-400 uppercase font-semibold text-[10px]">Balance Due</p>
-                        <p className="text-sm font-extrabold text-rose-600">${Number(inv.balance).toFixed(2)}</p>
+                        <p className="text-sm font-extrabold text-rose-600">{formatINR(inv.balance)}</p>
                       </div>
 
                       {hasRole('admin', 'receptionist') && Number(inv.balance) > 0 && (
@@ -614,7 +615,7 @@ export const PatientDetail: React.FC = () => {
                           onClick={() => setPaymentInvoice(inv)}
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm"
                         >
-                          <DollarSign className="w-3.5 h-3.5" />
+                          <IndianRupee className="w-3.5 h-3.5" />
                           <span>Record Payment</span>
                         </button>
                       )}
@@ -637,16 +638,16 @@ export const PatientDetail: React.FC = () => {
                           <th className="py-2 px-4">Item Description</th>
                           <th className="py-2 px-4">Unit Price</th>
                           <th className="py-2 px-4">Qty</th>
-                          <th className="py-2 px-4 text-right">Total ($)</th>
+                          <th className="py-2 px-4 text-right">Total (₹)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {inv.items.map((i) => (
                           <tr key={i.id}>
                             <td className="py-2 px-4 font-medium text-slate-800">{i.description}</td>
-                            <td className="py-2 px-4">${Number(i.unit_price).toFixed(2)}</td>
+                            <td className="py-2 px-4">{formatINR(i.unit_price)}</td>
                             <td className="py-2 px-4">{i.quantity}</td>
-                            <td className="py-2 px-4 text-right font-mono font-bold">${Number(i.total).toFixed(2)}</td>
+                            <td className="py-2 px-4 text-right font-mono font-bold">{formatINR(i.total)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -666,10 +667,10 @@ export const PatientDetail: React.FC = () => {
                             className="flex items-center justify-between text-xs p-2 bg-slate-50 rounded-lg border border-slate-100"
                           >
                             <span className="text-slate-600 font-medium">
-                              {new Date(pay.payment_date).toLocaleDateString()} • {pay.payment_method.toUpperCase()}
+                              {formatDateIN(pay.payment_date)} • {pay.payment_method.toUpperCase()}
                               {pay.transaction_reference && ` (${pay.transaction_reference})`}
                             </span>
-                            <span className="font-bold text-emerald-600">+${Number(pay.amount).toFixed(2)}</span>
+                            <span className="font-bold text-emerald-600">+{formatINR(pay.amount)}</span>
                           </div>
                         ))}
                       </div>

@@ -54,11 +54,11 @@ class Settings(BaseSettings):
     
     # Clinic Details for PDFs
     CLINIC_NAME: str = "Apex Dental Care & Implant Center"
-    CLINIC_ADDRESS: str = "Suite 400, Healthcare Boulevard, Metro City"
-    CLINIC_PHONE: str = "+1 (555) 321-4567"
-    CLINIC_EMAIL: str = "contact@apexdental.com"
-    CLINIC_WEBSITE: str = "www.apexdental.com"
-    CLINIC_REG_NO: str = "REG-DENT-2024-8849"
+    CLINIC_ADDRESS: str = "Plot 42, 100 Feet Road, Indiranagar, Bengaluru, Karnataka 560038"
+    CLINIC_PHONE: str = "+91 80 4123 4567 / +91 98765 43210"
+    CLINIC_EMAIL: str = "contact@apexdental.in"
+    CLINIC_WEBSITE: str = "www.apexdental.in"
+    CLINIC_REG_NO: str = "GSTIN: 29AAAAA0000A1Z5 | DCI-REG-8849"
     
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

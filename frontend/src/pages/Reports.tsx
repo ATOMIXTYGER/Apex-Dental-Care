@@ -5,7 +5,7 @@ import {
   BarChart3, 
   Download, 
   Calendar, 
-  DollarSign, 
+  IndianRupee, 
   FileSpreadsheet, 
   AlertCircle, 
   CreditCard, 
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { reportsApi } from '../api/reports';
 import { useAuth } from '../context/AuthContext';
+import { formatINR, formatDateIN, formatDateTimeIN } from '../utils/formatters';
 
 export default function Reports() {
   const { user } = useAuth();
@@ -91,7 +92,7 @@ export default function Reports() {
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <DollarSign className="w-4 h-4" />
+          <IndianRupee className="w-4 h-4" />
           Revenue Collections ({revenueData.length})
         </button>
         <button
@@ -114,11 +115,11 @@ export default function Reports() {
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Revenue Collected</div>
-                <div className="text-2xl font-bold text-emerald-600 mt-1">${totalRevenueCollected.toFixed(2)}</div>
+                <div className="text-2xl font-bold text-emerald-600 mt-1">{formatINR(totalRevenueCollected)}</div>
                 <div className="text-xs text-slate-400 mt-0.5">{revenueData.length} transactions in period</div>
               </div>
               <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                <DollarSign className="w-6 h-6" />
+                <IndianRupee className="w-6 h-6" />
               </div>
             </div>
 
@@ -126,7 +127,7 @@ export default function Reports() {
               <div>
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Avg Transaction Size</div>
                 <div className="text-2xl font-bold text-slate-900 mt-1">
-                  ${revenueData.length > 0 ? (totalRevenueCollected / revenueData.length).toFixed(2) : '0.00'}
+                  {formatINR(revenueData.length > 0 ? (totalRevenueCollected / revenueData.length) : 0)}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">Per receipt average</div>
               </div>
@@ -138,7 +139,7 @@ export default function Reports() {
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Date Period</div>
-                <div className="text-sm font-semibold text-slate-800 mt-1">{startDate} to {endDate}</div>
+                <div className="text-sm font-semibold text-slate-800 mt-1">{formatDateIN(startDate)} to {formatDateIN(endDate)}</div>
                 <div className="text-xs text-slate-400 mt-0.5">Filter applied below</div>
               </div>
               <div className="p-3 bg-slate-50 text-slate-600 rounded-xl">
@@ -195,7 +196,7 @@ export default function Reports() {
               </div>
             ) : revenueData.length === 0 ? (
               <div className="py-16 text-center">
-                <DollarSign className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <IndianRupee className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p className="text-base font-semibold text-slate-700">No payment receipts in selected range</p>
                 <p className="text-xs text-slate-500 mt-1">Adjust dates to inspect other periods.</p>
               </div>
@@ -210,7 +211,7 @@ export default function Reports() {
                       <th className="py-3 px-4">Payment Method</th>
                       <th className="py-3 px-4">Transaction Ref</th>
                       <th className="py-3 px-4">Date & Time</th>
-                      <th className="py-3 px-4 text-right">Amount ($)</th>
+                      <th className="py-3 px-4 text-right">Amount (₹)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs">
@@ -225,8 +226,8 @@ export default function Reports() {
                           </span>
                         </td>
                         <td className="py-3 px-4 font-mono text-slate-500">{row.reference || '-'}</td>
-                        <td className="py-3 px-4 text-slate-600">{new Date(row.date).toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right font-bold text-emerald-600">+${Number(row.amount).toFixed(2)}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatDateTimeIN(row.date)}</td>
+                        <td className="py-3 px-4 text-right font-bold text-emerald-600">+{formatINR(row.amount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -243,7 +244,7 @@ export default function Reports() {
           <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 flex items-center justify-between">
             <div>
               <div className="text-xs font-bold text-rose-700 uppercase tracking-wider">Total Outstanding Patient Accounts</div>
-              <div className="text-3xl font-extrabold text-rose-800 mt-1">${totalOutstandingBalance.toFixed(2)}</div>
+              <div className="text-3xl font-extrabold text-rose-800 mt-1">{formatINR(totalOutstandingBalance)}</div>
               <p className="text-xs text-rose-600 mt-1">Requires accounts follow-up and patient collection reminders.</p>
             </div>
             <div className="p-3 bg-white text-rose-600 rounded-xl shadow-sm">
@@ -274,9 +275,9 @@ export default function Reports() {
                       <th className="py-3 px-4">Phone</th>
                       <th className="py-3 px-4">Created Date</th>
                       <th className="py-3 px-4">Due Date</th>
-                      <th className="py-3 px-4 text-right">Total ($)</th>
-                      <th className="py-3 px-4 text-right">Paid ($)</th>
-                      <th className="py-3 px-4 text-right">Balance Due ($)</th>
+                      <th className="py-3 px-4 text-right">Total (₹)</th>
+                      <th className="py-3 px-4 text-right">Paid (₹)</th>
+                      <th className="py-3 px-4 text-right">Balance Due (₹)</th>
                       <th className="py-3 px-4 text-center">Action</th>
                     </tr>
                   </thead>
@@ -290,11 +291,11 @@ export default function Reports() {
                           </Link>
                         </td>
                         <td className="py-3 px-4 text-slate-600">{inv.phone || '-'}</td>
-                        <td className="py-3 px-4 text-slate-600">{inv.created_at?.slice(0, 10)}</td>
-                        <td className="py-3 px-4 text-slate-600">{inv.due_date || '-'}</td>
-                        <td className="py-3 px-4 text-right text-slate-700">${Number(inv.total_amount).toFixed(2)}</td>
-                        <td className="py-3 px-4 text-right text-emerald-600">${Number(inv.paid_amount).toFixed(2)}</td>
-                        <td className="py-3 px-4 text-right font-bold text-rose-600">${Number(inv.balance_due).toFixed(2)}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatDateIN(inv.created_at)}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatDateIN(inv.due_date) || '-'}</td>
+                        <td className="py-3 px-4 text-right text-slate-700">{formatINR(inv.total_amount)}</td>
+                        <td className="py-3 px-4 text-right text-emerald-600">{formatINR(inv.paid_amount)}</td>
+                        <td className="py-3 px-4 text-right font-bold text-rose-600">{formatINR(inv.balance_due)}</td>
                         <td className="py-3 px-4 text-center">
                           <Link
                             to="/billing"

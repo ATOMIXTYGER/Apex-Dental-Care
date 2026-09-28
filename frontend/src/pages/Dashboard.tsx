@@ -3,7 +3,7 @@ import {
   Users,
   Calendar,
   Activity,
-  DollarSign,
+  IndianRupee,
   Clock,
   TrendingUp,
   AlertTriangle,
@@ -28,6 +28,7 @@ import {
 } from 'recharts';
 import { DashboardSummary, DashboardAnalytics } from '../types';
 import { dashboardApi } from '../api/dashboard';
+import { formatINR } from '../utils/formatters';
 
 const STATUS_COLORS: Record<string, string> = {
   scheduled: '#3b82f6',
@@ -172,10 +173,10 @@ export const Dashboard: React.FC = () => {
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-[11px] font-semibold uppercase tracking-wider">Total Revenue</span>
-            <DollarSign className="w-4 h-4 text-emerald-600" />
+            <IndianRupee className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-black text-emerald-600">
-            ${isLoading ? '...' : Number(summary?.total_revenue ?? 0).toFixed(0)}
+            {isLoading ? '...' : formatINR(summary?.total_revenue ?? 0, false)}
           </div>
           <div className="text-[10px] text-emerald-700 font-semibold mt-1">
             Realized cash inflow
@@ -189,7 +190,7 @@ export const Dashboard: React.FC = () => {
             <AlertTriangle className="w-4 h-4 text-rose-500" />
           </div>
           <div className="text-2xl font-black text-rose-600">
-            ${isLoading ? '...' : Number(summary?.outstanding_payments ?? 0).toFixed(0)}
+            {isLoading ? '...' : formatINR(summary?.outstanding_payments ?? 0, false)}
           </div>
           <div className="text-[10px] text-rose-700 font-semibold mt-1">
             Unpaid receivables
@@ -227,11 +228,11 @@ export const Dashboard: React.FC = () => {
                   <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '11px' }}
-                    formatter={(val: any) => [`$${Number(val).toFixed(2)}`, '']}
+                    formatter={(val: any) => [formatINR(val), '']}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                  <Area type="monotone" dataKey="revenue" name="Collected Revenue ($)" stroke="#0d9488" fillOpacity={1} fill="url(#colorRev)" />
-                  <Area type="monotone" dataKey="invoiced" name="Invoiced Amount ($)" stroke="#3b82f6" fillOpacity={1} fill="url(#colorInv)" />
+                  <Area type="monotone" dataKey="revenue" name="Collected Revenue (₹)" stroke="#0d9488" fillOpacity={1} fill="url(#colorRev)" />
+                  <Area type="monotone" dataKey="invoiced" name="Invoiced Amount (₹)" stroke="#3b82f6" fillOpacity={1} fill="url(#colorInv)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (

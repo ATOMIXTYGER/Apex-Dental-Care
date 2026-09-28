@@ -9,7 +9,7 @@ import {
   CheckCircle, 
   Clock, 
   AlertCircle, 
-  DollarSign, 
+  IndianRupee, 
   Layers, 
   ChevronDown, 
   ChevronUp, 
@@ -21,6 +21,7 @@ import { treatmentsApi } from '../api/treatments';
 import { useAuth } from '../context/AuthContext';
 import TreatmentPlanModal from '../components/treatments/TreatmentPlanModal';
 import { TreatmentPlan, TreatmentItem, ProcedureCatalog } from '../types';
+import { formatINR } from '../utils/formatters';
 
 export default function Treatments() {
   const { user } = useAuth();
@@ -260,7 +261,7 @@ export default function Treatments() {
                         {/* Cost */}
                         <div className="text-right">
                           <div className="text-xs font-semibold text-slate-500">Total Estimate</div>
-                          <div className="text-base font-bold text-slate-900">${Number(totalCost).toFixed(2)}</div>
+                          <div className="text-base font-bold text-slate-900">{formatINR(totalCost)}</div>
                         </div>
 
                         <div className="text-slate-400 p-1">
@@ -286,7 +287,7 @@ export default function Treatments() {
                                   <th className="py-2.5 px-3">Tooth</th>
                                   <th className="py-2.5 px-3">Procedure Name</th>
                                   <th className="py-2.5 px-3">Category</th>
-                                  <th className="py-2.5 px-3">Estimated Cost</th>
+                                  <th className="py-2.5 px-3">Estimated Cost (₹)</th>
                                   <th className="py-2.5 px-3">Status</th>
                                   <th className="py-2.5 px-3">Notes</th>
                                   {(user?.role === 'dentist' || user?.role === 'admin') && (
@@ -302,7 +303,7 @@ export default function Treatments() {
                                     </td>
                                     <td className="py-2.5 px-3 font-medium text-slate-900">{item.procedure_name}</td>
                                     <td className="py-2.5 px-3 text-slate-500 capitalize">{(item as any).procedure?.category || 'General'}</td>
-                                    <td className="py-2.5 px-3 font-semibold text-slate-800">${Number(item.estimated_cost).toFixed(2)}</td>
+                                    <td className="py-2.5 px-3 font-semibold text-slate-800">{formatINR(item.estimated_cost)}</td>
                                     <td className="py-2.5 px-3">{getItemStatusBadge(item.status)}</td>
                                     <td className="py-2.5 px-3 text-slate-500 max-w-xs truncate">{item.notes || '-'}</td>
                                     {(user?.role === 'dentist' || user?.role === 'admin') && (
@@ -355,7 +356,7 @@ export default function Treatments() {
                     <th className="py-3 px-4">Code</th>
                     <th className="py-3 px-4">Procedure Name</th>
                     <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Default Fee</th>
+                    <th className="py-3 px-4">Default Fee (₹)</th>
                     <th className="py-3 px-4">Estimated Duration</th>
                     <th className="py-3 px-4">Description</th>
                   </tr>
@@ -370,7 +371,7 @@ export default function Treatments() {
                           {item.category}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-bold text-slate-900">${Number(item.default_cost).toFixed(2)}</td>
+                      <td className="py-3 px-4 font-bold text-slate-900">{formatINR(item.default_cost)}</td>
                       <td className="py-3 px-4 text-xs text-slate-500">{(item as any).estimated_duration_minutes || 30} mins</td>
                       <td className="py-3 px-4 text-xs text-slate-500 max-w-sm truncate">{item.description || '-'}</td>
                     </tr>

@@ -56,19 +56,19 @@ def seed_database(db=None):
 
     # 1. Procedure Catalog
     procedures_data = [
-        ("CONS-01", "Comprehensive Oral Examination", "Preventive", Decimal('50.00'), "Full oral cavity checkup, soft tissue exam, periodontal probing"),
-        ("CLEAN-01", "Dental Prophylaxis & Scaling", "Preventive", Decimal('90.00'), "Ultrasonic scaling and polishing for plaque/calculus removal"),
-        ("FILL-COMP", "Composite Resin Filling (1-2 surfaces)", "Restorative", Decimal('120.00'), "Tooth-colored aesthetic resin restoration"),
-        ("FILL-COMP-L", "Composite Resin Filling (Complex/MOD)", "Restorative", Decimal('180.00'), "Multi-surface composite restoration"),
-        ("RCT-ANT", "Root Canal Therapy (Anterior)", "Endodontics", Decimal('350.00'), "Chemo-mechanical canal preparation, disinfection and obturation"),
-        ("RCT-MOL", "Root Canal Therapy (Molar)", "Endodontics", Decimal('550.00'), "Multi-canal molar endodontic treatment"),
-        ("CRN-PFM", "Porcelain-Fused-to-Metal (PFM) Crown", "Prosthodontics", Decimal('450.00'), "High strength PFM crown restoration"),
-        ("CRN-ZIRC", "Zirconia Aesthetic Crown", "Prosthodontics", Decimal('650.00'), "Monolithic CAD/CAM zirconia crown"),
-        ("EXT-SIMP", "Simple Tooth Extraction", "Surgery", Decimal('80.00'), "Routine forceps extraction with local anaesthesia"),
-        ("EXT-SURG", "Surgical Extraction / Impaction", "Surgery", Decimal('220.00'), "Surgical elevation and bone guttering for impacted tooth"),
-        ("XRAY-PA", "Periapical Digital Radiograph (IOPA)", "Diagnostic", Decimal('25.00'), "High resolution digital periapical sensor radiograph"),
-        ("XRAY-OPG", "Panoramic Radiograph (OPG)", "Diagnostic", Decimal('60.00'), "Full mouth panoramic digital radiograph"),
-        ("BLEACH-01", "In-Office Teeth Whitening", "Cosmetic", Decimal('300.00'), "LED accelerated bleaching treatment"),
+        ("CONS-01", "Comprehensive Oral Examination", "Preventive", Decimal('500.00'), "Full oral cavity checkup, soft tissue exam, periodontal probing"),
+        ("CLEAN-01", "Dental Prophylaxis & Scaling", "Preventive", Decimal('1200.00'), "Ultrasonic scaling and polishing for plaque/calculus removal"),
+        ("FILL-COMP", "Composite Resin Filling (1-2 surfaces)", "Restorative", Decimal('1500.00'), "Tooth-colored aesthetic resin restoration"),
+        ("FILL-COMP-L", "Composite Resin Filling (Complex/MOD)", "Restorative", Decimal('2500.00'), "Multi-surface composite restoration"),
+        ("RCT-ANT", "Root Canal Therapy (Anterior)", "Endodontics", Decimal('3500.00'), "Chemo-mechanical canal preparation, disinfection and obturation"),
+        ("RCT-MOL", "Root Canal Therapy (Molar)", "Endodontics", Decimal('5500.00'), "Multi-canal molar endodontic treatment"),
+        ("CRN-PFM", "Porcelain-Fused-to-Metal (PFM) Crown", "Prosthodontics", Decimal('4500.00'), "High strength PFM crown restoration"),
+        ("CRN-ZIRC", "Zirconia Aesthetic Crown", "Prosthodontics", Decimal('8500.00'), "Monolithic CAD/CAM zirconia crown"),
+        ("EXT-SIMP", "Simple Tooth Extraction", "Surgery", Decimal('1000.00'), "Routine forceps extraction with local anaesthesia"),
+        ("EXT-SURG", "Surgical Extraction / Impaction", "Surgery", Decimal('4000.00'), "Surgical elevation and bone guttering for impacted tooth"),
+        ("XRAY-PA", "Periapical Digital Radiograph (IOPA)", "Diagnostic", Decimal('300.00'), "High resolution digital periapical sensor radiograph"),
+        ("XRAY-OPG", "Panoramic Radiograph (OPG)", "Diagnostic", Decimal('800.00'), "Full mouth panoramic digital radiograph"),
+        ("BLEACH-01", "In-Office Teeth Whitening", "Cosmetic", Decimal('7500.00'), "LED accelerated bleaching treatment"),
     ]
     for code, name, cat, cost, desc in procedures_data:
         db.add(ProcedureCatalog(code=code, name=name, category=cat, default_cost=cost, description=desc))
@@ -89,13 +89,13 @@ def seed_database(db=None):
 
     # 3. Appointment Types
     app_types = [
-        ("Routine Checkup & Consultation", 30, "#10b981", 50),
-        ("Teeth Cleaning / Scaling", 45, "#06b6d4", 90),
-        ("Filling / Restoration", 45, "#3b82f6", 120),
-        ("Root Canal Treatment", 60, "#8b5cf6", 350),
-        ("Extraction / Oral Surgery", 45, "#ef4444", 150),
-        ("Crown Preparation & Fitting", 60, "#f59e0b", 450),
-        ("Emergency Dental Care", 30, "#dc2626", 100),
+        ("Routine Checkup & Consultation", 30, "#10b981", 500),
+        ("Teeth Cleaning / Scaling", 45, "#06b6d4", 1200),
+        ("Filling / Restoration", 45, "#3b82f6", 1500),
+        ("Root Canal Treatment", 60, "#8b5cf6", 3500),
+        ("Extraction / Oral Surgery", 45, "#ef4444", 2000),
+        ("Crown Preparation & Fitting", 60, "#f59e0b", 4500),
+        ("Emergency Dental Care", 30, "#dc2626", 1000),
     ]
     appt_type_objs = []
     for name, dur, col, fee in app_types:
@@ -112,7 +112,7 @@ def seed_database(db=None):
         hashed_password=pw_hash,
         full_name="Sarah Jenkins (Admin)",
         role="admin",
-        phone="+1 555-0100",
+        phone="+91 98765 00100",
         is_active=True
     )
     db.add(admin_user)
@@ -123,7 +123,7 @@ def seed_database(db=None):
         hashed_password=pw_hash,
         full_name="Dr. Marcus Chen",
         role="dentist",
-        phone="+1 555-0201",
+        phone="+91 98765 00201",
         is_active=True
     )
     db.add(dentist1_user)
@@ -134,7 +134,7 @@ def seed_database(db=None):
         hashed_password=pw_hash,
         full_name="Dr. Elena Alvarez",
         role="dentist",
-        phone="+1 555-0202",
+        phone="+91 98765 00202",
         is_active=True
     )
     db.add(dentist2_user)
@@ -145,7 +145,7 @@ def seed_database(db=None):
         hashed_password=pw_hash,
         full_name="Jessica Miller",
         role="receptionist",
-        phone="+1 555-0301",
+        phone="+91 98765 00301",
         is_active=True
     )
     db.add(rec1_user)
@@ -156,7 +156,7 @@ def seed_database(db=None):
         hashed_password=pw_hash,
         full_name="David Patel",
         role="receptionist",
-        phone="+1 555-0302",
+        phone="+91 98765 00302",
         is_active=True
     )
     db.add(rec2_user)
@@ -185,22 +185,22 @@ def seed_database(db=None):
 
     # 5. 16 Realistic Patients
     patients_data = [
-        ("Liam", "Smith", date(1985, 4, 12), "Male", "+1 555-1011", "liam.smith@example.com", "742 Evergreen Terrace, Springfield", "Emma Smith", "+1 555-1012", "O+", "Penicillin allergy", "None", "None", "Toothache in upper right molar on chewing"),
-        ("Olivia", "Johnson", date(1992, 8, 24), "Female", "+1 555-1021", "olivia.j@example.com", "124 Conch Street, Bikini", "Mark Johnson", "+1 555-1022", "A+", "None", "Hypertension", "Lisinopril 10mg", "Routine cleaning and checkup"),
-        ("Noah", "Williams", date(1978, 11, 3), "Male", "+1 555-1031", "noah.w@example.com", "304 Elm Street, Riverdale", "Sophia Williams", "+1 555-1032", "B+", "Latex", "Type 2 Diabetes", "Metformin 500mg", "Bleeding gums while brushing"),
-        ("Emma", "Brown", date(1995, 1, 15), "Female", "+1 555-1041", "emma.brown@example.com", "89 Maple Ave, Greenfield", "Lucas Brown", "+1 555-1042", "AB+", "Sulfa drugs", "Asthma", "Albuterol inhaler", "Chipped lower front tooth from accident"),
-        ("James", "Jones", date(1964, 6, 30), "Male", "+1 555-1051", "james.j@example.com", "412 Oak Lane, Lakeside", "Mary Jones", "+1 555-1052", "O-", "Aspirin", "Cardiovascular disease", "Atorvastatin 20mg", "Needs crown for missing tooth"),
-        ("Sophia", "Garcia", date(2001, 9, 18), "Female", "+1 555-1061", "sophia.g@example.com", "55 Pine Ridge, Hilltop", "Carlos Garcia", "+1 555-1062", "A-", "None", "None", "None", "Wisdom tooth pain in lower jaw"),
-        ("Benjamin", "Miller", date(1989, 12, 5), "Male", "+1 555-1071", "ben.miller@example.com", "77 Forest Court, Woodside", "Chloe Miller", "+1 555-1072", "B-", "None", "None", "None", "Sensitivity to cold water on lower left"),
-        ("Isabella", "Davis", date(1998, 3, 22), "Female", "+1 555-1081", "isabella.d@example.com", "101 Ocean Blvd, Bayview", "Ethan Davis", "+1 555-1082", "O+", "None", "Mild Anemia", "Iron supplements", "Wants teeth whitening for wedding"),
-        ("Lucas", "Rodriguez", date(1973, 7, 14), "Male", "+1 555-1091", "lucas.r@example.com", "230 Sunset Dr, Palms", "Ana Rodriguez", "+1 555-1092", "AB-", "Codeine", "GERD", "Omeprazole 20mg", "Loose lower molar"),
-        ("Mia", "Martinez", date(1990, 5, 29), "Female", "+1 555-1101", "mia.m@example.com", "410 Cedar Way, Fairview", "Diego Martinez", "+1 555-1102", "A+", "None", "Hypothyroidism", "Levothyroxine 50mcg", "Old silver filling fell out"),
-        ("Henry", "Hernandez", date(1982, 10, 8), "Male", "+1 555-1111", "henry.h@example.com", "882 Birch St, Highwood", "Elena Hernandez", "+1 555-1112", "O+", "None", "None", "None", "General consultation & staining"),
-        ("Harper", "Lopez", date(1994, 2, 17), "Female", "+1 555-1121", "harper.l@example.com", "315 Willow Terrace, Brookside", "Daniel Lopez", "+1 555-1122", "B+", "Amoxicillin", "Migraine", "Sumatriptan PRN", "Discoloration of front teeth"),
-        ("Alexander", "Gonzalez", date(1969, 8, 11), "Male", "+1 555-1131", "alex.g@example.com", "620 Sycamore Ave, Plainfield", "Grace Gonzalez", "+1 555-1132", "A+", "None", "High Cholesterol", "Rosuvastatin 10mg", "Severe throbbing pain keeping awake at night"),
-        ("Evelyn", "Wilson", date(1987, 12, 27), "Female", "+1 555-1141", "evelyn.w@example.com", "154 Walnut Rd, Crestview", "Ryan Wilson", "+1 555-1142", "O-", "None", "None", "None", "Bleeding gums and bad breath"),
-        ("Daniel", "Anderson", date(2003, 4, 19), "Male", "+1 555-1151", "daniel.a@example.com", "901 Chestnut St, Summit", "Karen Anderson", "+1 555-1152", "AB+", "None", "None", "None", "Mild sensitivity on upper premolars"),
-        ("Charlotte", "Thomas", date(1996, 7, 7), "Female", "+1 555-1161", "charlotte.t@example.com", "478 Magnolia St, Gardens", "Samuel Thomas", "+1 555-1162", "B+", "None", "None", "None", "Routine 6-month checkup and polish")
+        ("Aarav", "Sharma", date(1985, 4, 12), "Male", "+91 98765 10101", "aarav.sharma@example.in", "42, Indiranagar 100 Feet Road, Bengaluru 560038", "Pooja Sharma", "+91 98765 10102", "O+", "Penicillin allergy", "None", "None", "Toothache in upper right molar on chewing"),
+        ("Priya", "Nair", date(1992, 8, 24), "Female", "+91 98765 10201", "priya.nair@example.in", "15, Koramangala 4th Block, Bengaluru 560034", "Rohan Nair", "+91 98765 10202", "A+", "None", "Hypertension", "Amlodipine 5mg", "Routine cleaning and checkup"),
+        ("Rohan", "Verma", date(1978, 11, 3), "Male", "+91 98765 10301", "rohan.verma@example.in", "88, HSR Layout Sector 2, Bengaluru 560102", "Ananya Verma", "+91 98765 10302", "B+", "Latex", "Type 2 Diabetes", "Metformin 500mg", "Bleeding gums while brushing"),
+        ("Ananya", "Iyer", date(1995, 1, 15), "Female", "+91 98765 10401", "ananya.iyer@example.in", "12/A, Malleshwaram 7th Cross, Bengaluru 560003", "Karthik Iyer", "+91 98765 10402", "AB+", "Sulfa drugs", "Asthma", "Salbutamol inhaler", "Chipped lower front tooth from accident"),
+        ("Vikram", "Patel", date(1964, 6, 30), "Male", "+91 98765 10501", "vikram.patel@example.in", "56, Whitefield Main Road, Bengaluru 560066", "Meera Patel", "+91 98765 10502", "O-", "Aspirin", "Cardiovascular disease", "Atorvastatin 20mg", "Needs crown for missing tooth"),
+        ("Sneha", "Kulkarni", date(2001, 9, 18), "Female", "+91 98765 10601", "sneha.k@example.in", "204, Jayanagar 4th Block, Bengaluru 560011", "Aditya Kulkarni", "+91 98765 10602", "A-", "None", "None", "None", "Wisdom tooth pain in lower jaw"),
+        ("Aditya", "Reddy", date(1989, 12, 5), "Male", "+91 98765 10701", "aditya.reddy@example.in", "33, JP Nagar 6th Phase, Bengaluru 560078", "Kavya Reddy", "+91 98765 10702", "B-", "None", "None", "None", "Sensitivity to cold water on lower left"),
+        ("Kavya", "Deshmukh", date(1998, 3, 22), "Female", "+91 98765 10801", "kavya.d@example.in", "9, Banashankari 3rd Stage, Bengaluru 560085", "Siddharth Deshmukh", "+91 98765 10802", "O+", "None", "Mild Anemia", "Iron supplements", "Wants teeth whitening for wedding"),
+        ("Karthik", "Rao", date(1973, 7, 14), "Male", "+91 98765 10901", "karthik.rao@example.in", "77, Electronic City Phase 1, Bengaluru 560100", "Deepa Rao", "+91 98765 10902", "AB-", "Codeine", "GERD", "Omeprazole 20mg", "Loose lower molar"),
+        ("Meera", "Menon", date(1990, 5, 29), "Female", "+91 98765 11001", "meera.m@example.in", "18, Marathahalli Ring Road, Bengaluru 560037", "Gautam Menon", "+91 98765 11002", "A+", "None", "Hypothyroidism", "Thyronorm 50mcg", "Old silver filling fell out"),
+        ("Arjun", "Choudhury", date(1982, 10, 8), "Male", "+91 98765 11101", "arjun.c@example.in", "102, Sarjapur Road, Bengaluru 560035", "Ritu Choudhury", "+91 98765 11102", "O+", "None", "None", "None", "General consultation & staining"),
+        ("Pooja", "Bose", date(1994, 2, 17), "Female", "+91 98765 11201", "pooja.bose@example.in", "45, RT Nagar Main Road, Bengaluru 560032", "Sumit Bose", "+91 98765 11202", "B+", "Amoxicillin", "Migraine", "Naproxen PRN", "Discoloration of front teeth"),
+        ("Rahul", "Kapoor", date(1969, 8, 11), "Male", "+91 98765 11301", "rahul.k@example.in", "67, Rajajinagar 1st Block, Bengaluru 560010", "Simran Kapoor", "+91 98765 11302", "A+", "None", "High Cholesterol", "Rosuvastatin 10mg", "Severe throbbing pain keeping awake at night"),
+        ("Neha", "Gupta", date(1987, 12, 27), "Female", "+91 98765 11401", "neha.gupta@example.in", "22, BTM Layout 2nd Stage, Bengaluru 560076", "Amit Gupta", "+91 98765 11402", "O-", "None", "None", "None", "Bleeding gums and bad breath"),
+        ("Siddharth", "Mehta", date(2003, 4, 19), "Male", "+91 98765 11501", "sid.mehta@example.in", "81, Bellandur Outer Ring Rd, Bengaluru 560103", "Nisha Mehta", "+91 98765 11502", "AB+", "None", "None", "None", "Mild sensitivity on upper premolars"),
+        ("Ishita", "Sen", date(1996, 7, 7), "Female", "+91 98765 11601", "ishita.sen@example.in", "14, Cunningham Road, Bengaluru 560052", "Dev Sen", "+91 98765 11602", "B+", "None", "None", "None", "Routine 6-month checkup and polish")
     ]
 
     patient_objs = []
@@ -454,13 +454,13 @@ def seed_database(db=None):
     db.commit()
 
     # 9. Treatment Plans & Items
-    # Plan 1: Liam Smith Root Canal + Crown
+    # Plan 1: Aarav Sharma Root Canal + Crown
     tp1 = TreatmentPlan(
         patient_id=patient_objs[0].id,
         dentist_id=dentist1.id,
         title="Comprehensive Molar Endodontic & Restorative Plan",
         status="active",
-        estimated_total=Decimal('1000.00'),
+        estimated_total=Decimal('14000.00'),
         notes="Includes 3-visit RCT, post-endodontic core build-up, and monolithic Zirconia crown."
     )
     db.add(tp1)
@@ -470,8 +470,8 @@ def seed_database(db=None):
         treatment_plan_id=tp1.id,
         procedure_name="Root Canal Therapy (Molar)",
         tooth_number=16,
-        estimated_cost=Decimal('550.00'),
-        actual_cost=Decimal('550.00'),
+        estimated_cost=Decimal('5500.00'),
+        actual_cost=Decimal('5500.00'),
         status="in_progress",
         visit_id=v1.id,
         notes="Canals located: MB1, MB2, DB, Palatal. Working length verified by apex locator."
@@ -480,7 +480,7 @@ def seed_database(db=None):
         treatment_plan_id=tp1.id,
         procedure_name="Zirconia Aesthetic Crown",
         tooth_number=16,
-        estimated_cost=Decimal('450.00'),
+        estimated_cost=Decimal('8500.00'),
         actual_cost=Decimal('0.00'),
         status="planned",
         notes="Scheduled after obturation and core buildup."
@@ -488,13 +488,13 @@ def seed_database(db=None):
     db.add(ti1)
     db.add(ti2)
 
-    # Plan 2: Emma Brown Front Tooth Aesthetics
+    # Plan 2: Ananya Iyer Front Tooth Aesthetics
     tp2 = TreatmentPlan(
         patient_id=patient_objs[3].id,
         dentist_id=dentist2.id,
         title="Anterior Aesthetic Restoration",
         status="completed",
-        estimated_total=Decimal('180.00'),
+        estimated_total=Decimal('2500.00'),
         notes="Class IV composite build-up."
     )
     db.add(tp2)
@@ -504,8 +504,8 @@ def seed_database(db=None):
         treatment_plan_id=tp2.id,
         procedure_name="Composite Resin Filling (Complex/MOD)",
         tooth_number=11,
-        estimated_cost=Decimal('180.00'),
-        actual_cost=Decimal('180.00'),
+        estimated_cost=Decimal('2500.00'),
+        actual_cost=Decimal('2500.00'),
         status="completed",
         visit_id=v3.id,
         completed_at=datetime.now(timezone.utc) - timedelta(days=2),
@@ -559,7 +559,7 @@ def seed_database(db=None):
     db.commit()
 
     # 11. Invoices & Payments
-    # Invoice 1: Liam Smith
+    # Invoice 1: Aarav Sharma
     inv1 = Invoice(
         invoice_number="INV-2026-1001",
         patient_id=patient_objs[0].id,
@@ -567,21 +567,21 @@ def seed_database(db=None):
         treatment_plan_id=tp1.id,
         issue_date=today - timedelta(days=7),
         due_date=today + timedelta(days=7),
-        subtotal=Decimal('625.00'),
-        discount=Decimal('25.00'),
+        subtotal=Decimal('6300.00'),
+        discount=Decimal('300.00'),
         tax=Decimal('0.00'),
-        total=Decimal('600.00'),
-        paid_amount=Decimal('400.00'),
-        balance=Decimal('200.00'),
+        total=Decimal('6000.00'),
+        paid_amount=Decimal('4000.00'),
+        balance=Decimal('2000.00'),
         status="partially_paid",
         notes="Consultation + Digital X-ray + Pulpectomy stage."
     )
     db.add(inv1)
     db.flush()
 
-    ii1 = InvoiceItem(invoice_id=inv1.id, description="Emergency Consultation & Exam", unit_price=Decimal('50.00'), quantity=1, total=Decimal('50.00'))
-    ii2 = InvoiceItem(invoice_id=inv1.id, description="Periapical Digital Radiograph (IOPA)", unit_price=Decimal('25.00'), quantity=1, total=Decimal('25.00'))
-    ii3 = InvoiceItem(invoice_id=inv1.id, description="Root Canal Treatment Initiation (Tooth 16)", unit_price=Decimal('550.00'), quantity=1, total=Decimal('550.00'))
+    ii1 = InvoiceItem(invoice_id=inv1.id, description="Emergency Consultation & Exam", unit_price=Decimal('500.00'), quantity=1, total=Decimal('500.00'))
+    ii2 = InvoiceItem(invoice_id=inv1.id, description="Periapical Digital Radiograph (IOPA)", unit_price=Decimal('300.00'), quantity=1, total=Decimal('300.00'))
+    ii3 = InvoiceItem(invoice_id=inv1.id, description="Root Canal Treatment Initiation (Tooth 16)", unit_price=Decimal('5500.00'), quantity=1, total=Decimal('5500.00'))
     db.add(ii1)
     db.add(ii2)
     db.add(ii3)
@@ -589,7 +589,7 @@ def seed_database(db=None):
     pay1 = Payment(
         invoice_id=inv1.id,
         patient_id=patient_objs[0].id,
-        amount=Decimal('400.00'),
+        amount=Decimal('4000.00'),
         payment_method="card",
         transaction_reference="AUTH-TXN-994821",
         payment_date=datetime.now(timezone.utc) - timedelta(days=7),
@@ -598,18 +598,18 @@ def seed_database(db=None):
     )
     db.add(pay1)
 
-    # Invoice 2: Olivia Johnson (Paid in full)
+    # Invoice 2: Priya Nair (Paid in full)
     inv2 = Invoice(
         invoice_number="INV-2026-1002",
         patient_id=patient_objs[1].id,
         visit_id=v2.id,
         issue_date=today - timedelta(days=5),
         due_date=today - timedelta(days=5),
-        subtotal=Decimal('140.00'),
+        subtotal=Decimal('1700.00'),
         discount=Decimal('0.00'),
         tax=Decimal('0.00'),
-        total=Decimal('140.00'),
-        paid_amount=Decimal('140.00'),
+        total=Decimal('1700.00'),
+        paid_amount=Decimal('1700.00'),
         balance=Decimal('0.00'),
         status="paid",
         notes="Oral exam + scaling."
@@ -617,15 +617,15 @@ def seed_database(db=None):
     db.add(inv2)
     db.flush()
 
-    ii4 = InvoiceItem(invoice_id=inv2.id, description="Comprehensive Oral Examination", unit_price=Decimal('50.00'), quantity=1, total=Decimal('50.00'))
-    ii5 = InvoiceItem(invoice_id=inv2.id, description="Dental Prophylaxis & Scaling", unit_price=Decimal('90.00'), quantity=1, total=Decimal('90.00'))
+    ii4 = InvoiceItem(invoice_id=inv2.id, description="Comprehensive Oral Examination", unit_price=Decimal('500.00'), quantity=1, total=Decimal('500.00'))
+    ii5 = InvoiceItem(invoice_id=inv2.id, description="Dental Prophylaxis & Scaling", unit_price=Decimal('1200.00'), quantity=1, total=Decimal('1200.00'))
     db.add(ii4)
     db.add(ii5)
 
     pay2 = Payment(
         invoice_id=inv2.id,
         patient_id=patient_objs[1].id,
-        amount=Decimal('140.00'),
+        amount=Decimal('1700.00'),
         payment_method="upi",
         transaction_reference="UPI-REF-238491",
         payment_date=datetime.now(timezone.utc) - timedelta(days=5),
@@ -634,33 +634,33 @@ def seed_database(db=None):
     )
     db.add(pay2)
 
-    # Invoice 3: Emma Brown (Paid in full)
+    # Invoice 3: Ananya Iyer (Paid in full)
     inv3 = Invoice(
         invoice_number="INV-2026-1003",
         patient_id=patient_objs[3].id,
         visit_id=v3.id,
         issue_date=today - timedelta(days=2),
         due_date=today - timedelta(days=2),
-        subtotal=Decimal('205.00'),
-        discount=Decimal('5.00'),
+        subtotal=Decimal('2800.00'),
+        discount=Decimal('300.00'),
         tax=Decimal('0.00'),
-        total=Decimal('200.00'),
-        paid_amount=Decimal('200.00'),
+        total=Decimal('2500.00'),
+        paid_amount=Decimal('2500.00'),
         balance=Decimal('0.00'),
         status="paid"
     )
     db.add(inv3)
     db.flush()
 
-    ii6 = InvoiceItem(invoice_id=inv3.id, description="Digital IOPA X-Ray (11)", unit_price=Decimal('25.00'), quantity=1, total=Decimal('25.00'))
-    ii7 = InvoiceItem(invoice_id=inv3.id, description="Class IV Aesthetic Composite Restoration", unit_price=Decimal('180.00'), quantity=1, total=Decimal('180.00'))
+    ii6 = InvoiceItem(invoice_id=inv3.id, description="Digital IOPA X-Ray (11)", unit_price=Decimal('300.00'), quantity=1, total=Decimal('300.00'))
+    ii7 = InvoiceItem(invoice_id=inv3.id, description="Class IV Aesthetic Composite Restoration", unit_price=Decimal('2500.00'), quantity=1, total=Decimal('2500.00'))
     db.add(ii6)
     db.add(ii7)
 
     pay3 = Payment(
         invoice_id=inv3.id,
         patient_id=patient_objs[3].id,
-        amount=Decimal('200.00'),
+        amount=Decimal('2500.00'),
         payment_method="cash",
         payment_date=datetime.now(timezone.utc) - timedelta(days=2),
         notes="Cash payment received in full.",
@@ -693,13 +693,13 @@ def seed_database(db=None):
     # 13. Audit logs sample
     audit_samples = [
         ("LOGIN", admin_user, "System", "admin", "Admin session established"),
-        ("CREATE", rec1_user, "Patient", str(patient_objs[0].id), "Registered Liam Smith (P-1001)"),
-        ("CREATE", rec1_user, "Appointment", str(created_appts[0].id), "Booked appointment for Liam Smith"),
+        ("CREATE", rec1_user, "Patient", str(patient_objs[0].id), "Registered Aarav Sharma (P-1001)"),
+        ("CREATE", rec1_user, "Appointment", str(created_appts[0].id), "Booked appointment for Aarav Sharma"),
         ("CREATE", dentist1_user, "Visit", str(v1.id), "Recorded clinical examination for tooth 16"),
         ("TOOTH_UPDATE", dentist1_user, "ToothCondition", f"{patient_objs[0].id}-16", "Updated tooth 16 to root_canal (severe)"),
         ("PRESCRIPTION_CREATE", dentist1_user, "Prescription", str(rx1.id), "Issued RX-2026-1001 (3 items)"),
-        ("INVOICE_CREATE", rec1_user, "Invoice", str(inv1.id), "Generated invoice INV-2026-1001 ($600.00)"),
-        ("PAYMENT_CREATE", rec1_user, "Payment", str(pay1.id), "Recorded $400.00 card payment"),
+        ("INVOICE_CREATE", rec1_user, "Invoice", str(inv1.id), "Generated invoice INV-2026-1001 (₹6,000.00)"),
+        ("PAYMENT_CREATE", rec1_user, "Payment", str(pay1.id), "Recorded ₹4,000.00 card payment"),
     ]
     for action, usr, ent_name, ent_id, detail in audit_samples:
         db.add(AuditLog(

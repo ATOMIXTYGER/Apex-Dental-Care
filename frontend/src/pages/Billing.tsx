@@ -6,7 +6,7 @@ import {
   Plus, 
   Search, 
   Download, 
-  DollarSign, 
+  IndianRupee, 
   Calendar, 
   User as UserIcon, 
   CheckCircle, 
@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import InvoiceModal from '../components/billing/InvoiceModal';
 import PaymentModal from '../components/billing/PaymentModal';
 import { Invoice } from '../types';
+import { formatINR, formatDateIN, formatDateTimeIN } from '../utils/formatters';
 
 export default function Billing() {
   const { user } = useAuth();
@@ -104,7 +105,7 @@ export default function Billing() {
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Billed</div>
-            <div className="text-2xl font-bold text-slate-900 mt-1">${totalBilled.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-slate-900 mt-1">{formatINR(totalBilled)}</div>
             <div className="text-xs text-slate-400 mt-0.5">{invoices.length} invoices generated</div>
           </div>
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
@@ -115,7 +116,7 @@ export default function Billing() {
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Collected</div>
-            <div className="text-2xl font-bold text-emerald-600 mt-1">${totalPaid.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-emerald-600 mt-1">{formatINR(totalPaid)}</div>
             <div className="text-xs text-emerald-600 font-medium mt-0.5">
               {totalBilled > 0 ? `${((totalPaid / totalBilled) * 100).toFixed(1)}% recovery rate` : '0%'}
             </div>
@@ -128,7 +129,7 @@ export default function Billing() {
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Outstanding Balance</div>
-            <div className="text-2xl font-bold text-rose-600 mt-1">${totalOutstanding.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-rose-600 mt-1">{formatINR(totalOutstanding)}</div>
             <div className="text-xs text-slate-400 mt-0.5">Pending collection</div>
           </div>
           <div className="p-3 bg-rose-50 text-rose-600 rounded-xl">
@@ -215,10 +216,10 @@ export default function Billing() {
                         </span>
                         <span className="flex items-center">
                           <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          Date: {new Date(inv.created_at).toLocaleDateString()}
+                          Date: {formatDateIN(inv.created_at)}
                         </span>
                         {inv.due_date && (
-                          <span>Due: <strong className="text-slate-700">{inv.due_date}</strong></span>
+                          <span>Due: <strong className="text-slate-700">{formatDateIN(inv.due_date)}</strong></span>
                         )}
                       </div>
                     </div>
@@ -228,16 +229,16 @@ export default function Billing() {
                   <div className="flex items-center justify-between md:justify-end gap-5 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                     <div className="text-right">
                       <div className="text-xs text-slate-400">Total</div>
-                      <div className="text-sm font-semibold text-slate-900">${Number(inv.total).toFixed(2)}</div>
+                      <div className="text-sm font-semibold text-slate-900">{formatINR(inv.total)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-slate-400">Paid</div>
-                      <div className="text-sm font-semibold text-emerald-600">${Number(inv.paid_amount).toFixed(2)}</div>
+                      <div className="text-sm font-semibold text-emerald-600">{formatINR(inv.paid_amount)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-slate-400">Balance</div>
                       <div className={`text-sm font-bold ${balance > 0 ? 'text-rose-600' : 'text-slate-700'}`}>
-                        ${balance.toFixed(2)}
+                        {formatINR(balance)}
                       </div>
                     </div>
 
@@ -251,7 +252,7 @@ export default function Billing() {
                           }}
                           className="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition"
                         >
-                          <DollarSign className="w-3.5 h-3.5 mr-1" />
+                          <IndianRupee className="w-3.5 h-3.5 mr-1" />
                           Pay
                         </button>
                       )}
@@ -295,8 +296,8 @@ export default function Billing() {
                               <tr key={item.id} className="hover:bg-slate-50/60">
                                 <td className="py-2 px-3 font-medium text-slate-900">{item.description}</td>
                                 <td className="py-2 px-3 text-center text-slate-600">{item.quantity}</td>
-                                <td className="py-2 px-3 text-right text-slate-700">${Number(item.unit_price).toFixed(2)}</td>
-                                <td className="py-2 px-3 text-right font-semibold text-slate-900">${Number(item.total ?? (item.unit_price * item.quantity)).toFixed(2)}</td>
+                                <td className="py-2 px-3 text-right text-slate-700">{formatINR(item.unit_price)}</td>
+                                <td className="py-2 px-3 text-right font-semibold text-slate-900">{formatINR(item.total ?? (item.unit_price * item.quantity))}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -325,10 +326,10 @@ export default function Billing() {
                               {inv.payments.map((p) => (
                                 <tr key={p.id} className="hover:bg-slate-50/60">
                                   <td className="py-2 px-3 font-mono text-slate-600">TXN-{p.id}</td>
-                                  <td className="py-2 px-3 text-slate-600">{new Date(p.payment_date).toLocaleString()}</td>
+                                  <td className="py-2 px-3 text-slate-600">{formatDateTimeIN(p.payment_date)}</td>
                                   <td className="py-2 px-3 capitalize font-medium text-slate-800">{p.payment_method.replace('_', ' ')}</td>
                                   <td className="py-2 px-3 text-slate-500 font-mono">{p.transaction_reference || '-'}</td>
-                                  <td className="py-2 px-3 text-right font-bold text-emerald-600">+${Number(p.amount).toFixed(2)}</td>
+                                  <td className="py-2 px-3 text-right font-bold text-emerald-600">+{formatINR(p.amount)}</td>
                                 </tr>
                               ))}
                             </tbody>

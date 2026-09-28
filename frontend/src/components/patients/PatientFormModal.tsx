@@ -146,7 +146,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                    placeholder="e.g. Liam"
+                    placeholder="e.g. Rahul"
                   />
                 </div>
                 <div>
@@ -157,7 +157,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                    placeholder="e.g. Smith"
+                    placeholder="e.g. Sharma"
                   />
                 </div>
               </div>
@@ -213,7 +213,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+91 98765 43210"
                   />
                 </div>
                 <div>
@@ -235,7 +235,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                  placeholder="Street, City, Postal Code"
+                  placeholder="Flat/House No., Street, City, PIN Code (e.g. Mumbai, 400001)"
                 />
               </div>
 
@@ -247,6 +247,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
                     value={emergencyContactName}
                     onChange={(e) => setEmergencyContactName(e.target.value)}
                     className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    placeholder="e.g. Priya Sharma"
                   />
                 </div>
                 <div>
@@ -256,6 +257,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
                     value={emergencyContactPhone}
                     onChange={(e) => setEmergencyContactPhone(e.target.value)}
                     className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    placeholder="+91 98765 43211"
                   />
                 </div>
               </div>

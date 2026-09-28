@@ -37,7 +37,7 @@ def export_revenue_csv(
 ):
     """Export revenue report to standard CSV."""
     data = ReportService.get_revenue_report(db, start_date=start_date, end_date=end_date)
-    headers = ["Payment ID", "Invoice #", "Patient Name", "Amount ($)", "Method", "Reference", "Date"]
+    headers = ["Payment ID", "Invoice #", "Patient Name", "Amount (₹)", "Method", "Reference", "Date"]
     rows = [
         [d["payment_id"], d["invoice_number"], d["patient_name"], d["amount"], d["method"], d["reference"], d["date"]]
         for d in data

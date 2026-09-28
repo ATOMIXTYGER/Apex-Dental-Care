@@ -3,6 +3,7 @@ import { X, Plus, Trash2, Receipt } from 'lucide-react';
 import { billingApi } from '../../api/billing';
 import { patientsApi } from '../../api/patients';
 import { Patient } from '../../types';
+import { formatINR } from '../../utils/formatters';
 
 interface InvoiceModalProps {
   patientId?: number;
@@ -137,7 +138,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Discount ($)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Discount (₹)</label>
               <input
                 type="number"
                 step="0.01"
@@ -148,7 +149,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Tax ($)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Tax (₹)</label>
               <input
                 type="number"
                 step="0.01"
@@ -213,7 +214,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                   </div>
 
                   <div className="col-span-3">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Unit Price ($)</label>
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Unit Price (₹)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -250,7 +251,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Due upon receipt. Insurance pre-authorization attached."
+              placeholder="e.g. Due upon receipt. UPI QR Code or Net Banking accepted."
               className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
@@ -259,23 +260,23 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
             <div className="flex justify-between text-slate-600">
               <span>Subtotal:</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>{formatINR(subtotal)}</span>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-red-600 font-medium">
                 <span>Discount:</span>
-                <span>-${Number(discount).toFixed(2)}</span>
+                <span>-{formatINR(discount)}</span>
               </div>
             )}
             {tax > 0 && (
               <div className="flex justify-between text-slate-600">
-                <span>Tax:</span>
-                <span>+${Number(tax).toFixed(2)}</span>
+                <span>Tax (GST):</span>
+                <span>+{formatINR(tax)}</span>
               </div>
             )}
             <div className="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-slate-200">
               <span>Grand Total:</span>
-              <span className="text-teal-700">${total.toFixed(2)}</span>
+              <span className="text-teal-700">{formatINR(total)}</span>
             </div>
           </div>
 
