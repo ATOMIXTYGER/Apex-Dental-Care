@@ -1,16 +1,27 @@
+import json
 from decimal import Decimal
 from datetime import date, datetime, timezone
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from fastapi import HTTPException, status, Request
 
-from app.models.billing import Invoice, InvoiceItem, Payment
+from app.config import settings
+from app.models.billing import Invoice, InvoiceItem, Payment, PaymentWebhookEvent, PaymentRefund
 from app.models.patient import Patient
 from app.models.user import User
-from app.schemas.billing import InvoiceCreate, PaymentCreate
-from app.pdf.generator import generate_invoice_pdf
+from app.schemas.billing import (
+    InvoiceCreate,
+    PaymentCreate,
+    PaymentOrderCreate,
+    PaymentOrderResponse,
+    PaymentVerifyRequest,
+    PaymentVerifyResponse,
+    PaymentRefundRequest,
+)
+from app.pdf.generator import generate_invoice_pdf, generate_payment_receipt_pdf
 from app.audit.service import log_audit_event
+from app.payments.factory import get_payment_provider
 
 class BillingService:
     @staticmethod
@@ -200,3 +211,542 @@ class BillingService:
     def get_pdf(cls, db: Session, invoice_id: int) -> bytes:
         inv = cls.get_invoice_by_id(db, invoice_id)
         return generate_invoice_pdf(inv, inv.patient)
+
+    @classmethod
+    def create_payment_order(
+        cls,
+        db: Session,
+        invoice_id: int,
+        data: PaymentOrderCreate,
+        current_user: User,
+        request: Optional[Request] = None
+    ) -> PaymentOrderResponse:
+        """
+        Create a secure payment gateway order for an invoice.
+        Enforces server-side balance calculation, rejects overpayments, and supports idempotency.
+        """
+        invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "INVOICE_NOT_FOUND", "message": "Invoice not found."}
+            )
+
+        if invoice.status == "voided":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVOICE_VOIDED", "message": "Cannot initiate payments on a voided invoice."}
+            )
+
+        if invoice.balance <= Decimal('0.00'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVOICE_ALREADY_PAID", "message": "This invoice is already paid in full."}
+            )
+
+        # Calculate exact amount to pay server-side
+        amount_to_pay = Decimal(str(data.amount)) if data.amount is not None else invoice.balance
+        if amount_to_pay <= Decimal('0.00'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_AMOUNT", "message": "Payment amount must be greater than zero."}
+            )
+
+        if amount_to_pay > invoice.balance:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "OVERPAYMENT_NOT_ALLOWED",
+                    "message": f"Payment amount (₹{amount_to_pay:.2f}) exceeds current outstanding balance (₹{invoice.balance:.2f})."
+                }
+            )
+
+        # Idempotency check
+        if data.idempotency_key:
+            existing_payment = db.query(Payment).filter(Payment.idempotency_key == data.idempotency_key).first()
+            if existing_payment:
+                if existing_payment.status == "SUCCESS":
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail={"code": "IDEMPOTENT_PAYMENT_ALREADY_SUCCESS", "message": "A payment with this idempotency key was already completed."}
+                    )
+                elif existing_payment.status == "PENDING" and existing_payment.provider_order_id:
+                    # Return existing pending order idempotently
+                    provider = get_payment_provider(existing_payment.provider)
+                    patient = invoice.patient
+                    return PaymentOrderResponse(
+                        order_id=existing_payment.provider_order_id,
+                        internal_payment_id=existing_payment.id,
+                        invoice_id=invoice.id,
+                        amount=existing_payment.amount,
+                        currency=existing_payment.currency,
+                        key_id=provider.public_key_id,
+                        provider=existing_payment.provider,
+                        clinic_name=settings.CLINIC_NAME,
+                        patient_name=patient.full_name if patient else "Valued Patient",
+                        patient_email=patient.email if patient else None,
+                        patient_phone=patient.phone if patient else None,
+                        is_test_mode=(settings.PAYMENT_MODE == "test"),
+                        notes={"invoice_number": invoice.invoice_number}
+                    )
+
+        # Obtain gateway provider
+        provider = get_payment_provider()
+
+        # Call provider abstraction to create order
+        receipt_ref = f"inv_{invoice.id}_{date.today().strftime('%Y%m%d')}"
+        notes_payload = {
+            "invoice_id": str(invoice.id),
+            "invoice_number": invoice.invoice_number,
+            "patient_id": str(invoice.patient_id)
+        }
+
+        order_res = provider.create_order(
+            amount=amount_to_pay,
+            currency=settings.PAYMENT_CURRENCY,
+            receipt=receipt_ref,
+            notes=notes_payload
+        )
+
+        # Persist pending internal payment record
+        payment = Payment(
+            invoice_id=invoice.id,
+            patient_id=invoice.patient_id,
+            amount=amount_to_pay,
+            currency=order_res.currency,
+            payment_method="card", # default gateway method category (can be card/upi/netbanking)
+            status="PENDING",
+            provider=order_res.provider,
+            provider_order_id=order_res.order_id,
+            idempotency_key=data.idempotency_key,
+            payment_date=datetime.now(timezone.utc),
+            received_by_user_id=current_user.id if current_user else None
+        )
+        db.add(payment)
+        db.commit()
+        db.refresh(payment)
+
+        log_audit_event(
+            db=db,
+            action="PAYMENT_ORDER_CREATED",
+            user=current_user,
+            entity_name="Payment",
+            entity_id=str(payment.id),
+            details={
+                "invoice_id": invoice.id,
+                "provider": order_res.provider,
+                "order_id": order_res.order_id,
+                "amount": str(amount_to_pay)
+            },
+            request=request
+        )
+
+        patient = invoice.patient
+        return PaymentOrderResponse(
+            order_id=order_res.order_id,
+            internal_payment_id=payment.id,
+            invoice_id=invoice.id,
+            amount=amount_to_pay,
+            currency=order_res.currency,
+            key_id=provider.public_key_id,
+            provider=order_res.provider,
+            clinic_name=settings.CLINIC_NAME,
+            patient_name=patient.full_name if patient else "Valued Patient",
+            patient_email=patient.email if patient else None,
+            patient_phone=patient.phone if patient else None,
+            is_test_mode=(settings.PAYMENT_MODE == "test"),
+            notes=notes_payload
+        )
+
+    @classmethod
+    def verify_payment(
+        cls,
+        db: Session,
+        data: PaymentVerifyRequest,
+        current_user: User,
+        request: Optional[Request] = None
+    ) -> PaymentVerifyResponse:
+        """
+        Cryptographically verifies payment signature server-side.
+        Executes an atomic database transaction with row-level locks to update payment and invoice balance.
+        """
+        # Fetch payment record
+        payment = db.query(Payment).filter(Payment.id == data.internal_payment_id).with_for_update().first()
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment record not found."}
+            )
+
+        # Idempotent response: If already verified, return success without re-crediting
+        if payment.status == "SUCCESS":
+            invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).first()
+            return PaymentVerifyResponse(
+                success=True,
+                payment_id=payment.id,
+                invoice_id=payment.invoice_id,
+                amount=payment.amount,
+                currency=payment.currency,
+                status="SUCCESS",
+                transaction_reference=payment.transaction_reference or payment.provider_payment_id or "",
+                balance_remaining=invoice.balance if invoice else Decimal('0.00'),
+                receipt_url=f"/api/v1/billing/payments/{payment.id}/receipt"
+            )
+
+        # Verify IDOR / entity matching
+        if payment.invoice_id != data.invoice_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVOICE_MISMATCH", "message": "Payment does not correspond to specified invoice."}
+            )
+
+        if payment.provider_order_id != data.provider_order_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "ORDER_MISMATCH", "message": "Provider order ID mismatch."}
+            )
+
+        # Cryptographic signature verification
+        provider = get_payment_provider(payment.provider)
+        v_result = provider.verify_payment_signature(
+            order_id=data.provider_order_id,
+            payment_id=data.provider_payment_id,
+            signature=data.provider_signature
+        )
+
+        if not v_result.is_valid:
+            payment.status = "FAILED"
+            payment.failure_reason = v_result.error_message or "Invalid signature"
+            payment.provider_signature = data.provider_signature
+            db.commit()
+
+            log_audit_event(
+                db=db,
+                action="PAYMENT_VERIFICATION_FAILED",
+                user=current_user,
+                entity_name="Payment",
+                entity_id=str(payment.id),
+                details={"reason": payment.failure_reason, "provider_order_id": data.provider_order_id},
+                request=request
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_SIGNATURE", "message": "Cryptographic payment verification failed."}
+            )
+
+        # Lock invoice record
+        invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).with_for_update().first()
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "INVOICE_NOT_FOUND", "message": "Invoice not found."}
+            )
+
+        if invoice.status == "voided":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVOICE_VOIDED", "message": "Invoice has been voided."}
+            )
+
+        # Atomically transition payment and recalculate balance
+        payment.status = "SUCCESS"
+        payment.provider_payment_id = data.provider_payment_id
+        payment.provider_signature = data.provider_signature
+        payment.transaction_reference = data.provider_payment_id
+        payment.paid_at = datetime.now(timezone.utc)
+        payment.payment_date = datetime.now(timezone.utc)
+
+        invoice.paid_amount += payment.amount
+        invoice.balance = invoice.total - invoice.paid_amount
+        if invoice.balance <= Decimal('0.00'):
+            invoice.balance = Decimal('0.00')
+            invoice.status = "paid"
+        else:
+            invoice.status = "partially_paid"
+
+        db.commit()
+        db.refresh(payment)
+        db.refresh(invoice)
+
+        log_audit_event(
+            db=db,
+            action="PAYMENT_SUCCESS",
+            user=current_user,
+            entity_name="Payment",
+            entity_id=str(payment.id),
+            details={
+                "invoice_id": invoice.id,
+                "amount": str(payment.amount),
+                "provider_payment_id": data.provider_payment_id,
+                "balance": str(invoice.balance)
+            },
+            request=request
+        )
+
+        return PaymentVerifyResponse(
+            success=True,
+            payment_id=payment.id,
+            invoice_id=invoice.id,
+            amount=payment.amount,
+            currency=payment.currency,
+            status="SUCCESS",
+            transaction_reference=data.provider_payment_id,
+            balance_remaining=invoice.balance,
+            receipt_url=f"/api/v1/billing/payments/{payment.id}/receipt"
+        )
+
+    @classmethod
+    def process_webhook(
+        cls,
+        db: Session,
+        provider_name: str,
+        raw_body: bytes,
+        signature_header: str,
+        request: Optional[Request] = None
+    ) -> Dict[str, Any]:
+        """
+        Process webhook notifications from the payment gateway.
+        Validates raw HMAC-SHA256 signature and guarantees idempotent processing.
+        """
+        provider = get_payment_provider(provider_name)
+        if not provider.verify_webhook_signature(raw_body, signature_header):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_WEBHOOK_SIGNATURE", "message": "Webhook signature verification failed."}
+            )
+
+        try:
+            event_data = json.loads(raw_body.decode("utf-8"))
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_WEBHOOK_PAYLOAD", "message": "Malformed JSON payload."}
+            )
+
+        event_id = event_data.get("id") or event_data.get("event_id") or f"evt_{hashlib.md5(raw_body).hexdigest()}"
+        event_type = event_data.get("event", "unknown")
+
+        # Idempotency check for webhooks
+        existing_event = db.query(PaymentWebhookEvent).filter(PaymentWebhookEvent.event_id == event_id).first()
+        if existing_event:
+            return {"status": "already_processed", "event_id": event_id}
+
+        webhook_log = PaymentWebhookEvent(
+            provider=provider_name,
+            event_id=event_id,
+            event_type=event_type,
+            status="processed",
+            payload=raw_body.decode("utf-8")
+        )
+        db.add(webhook_log)
+
+        # Handle captured payment event
+        if event_type in ("payment.captured", "order.paid"):
+            payload_entity = event_data.get("payload", {}).get("payment", {}).get("entity", {})
+            order_id = payload_entity.get("order_id") or event_data.get("payload", {}).get("order", {}).get("entity", {}).get("id")
+            pay_id = payload_entity.get("id")
+
+            if order_id:
+                payment = db.query(Payment).filter(Payment.provider_order_id == order_id).with_for_update().first()
+                if payment and payment.status != "SUCCESS":
+                    invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).with_for_update().first()
+                    payment.status = "SUCCESS"
+                    if pay_id:
+                        payment.provider_payment_id = pay_id
+                        payment.transaction_reference = pay_id
+                    payment.paid_at = datetime.now(timezone.utc)
+
+                    if invoice and invoice.status != "voided":
+                        invoice.paid_amount += payment.amount
+                        invoice.balance = invoice.total - invoice.paid_amount
+                        if invoice.balance <= Decimal('0.00'):
+                            invoice.balance = Decimal('0.00')
+                            invoice.status = "paid"
+                        else:
+                            invoice.status = "partially_paid"
+
+                    log_audit_event(
+                        db=db,
+                        action="PAYMENT_WEBHOOK_CAPTURED",
+                        entity_name="Payment",
+                        entity_id=str(payment.id),
+                        details={"event_id": event_id, "provider_payment_id": pay_id},
+                        request=request
+                    )
+
+        elif event_type == "payment.failed":
+            payload_entity = event_data.get("payload", {}).get("payment", {}).get("entity", {})
+            order_id = payload_entity.get("order_id")
+            if order_id:
+                payment = db.query(Payment).filter(Payment.provider_order_id == order_id).with_for_update().first()
+                if payment and payment.status == "PENDING":
+                    payment.status = "FAILED"
+                    payment.failure_reason = payload_entity.get("error_description", "Payment failed at gateway")
+
+        db.commit()
+        return {"status": "success", "event_id": event_id}
+
+    @classmethod
+    def reconcile_payment(
+        cls,
+        db: Session,
+        payment_id: int,
+        current_user: User,
+        request: Optional[Request] = None
+    ) -> Payment:
+        """
+        Reconcile a pending payment status directly with the payment gateway.
+        """
+        payment = db.query(Payment).filter(Payment.id == payment_id).with_for_update().first()
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment record not found."}
+            )
+
+        if payment.status == "SUCCESS":
+            return payment
+
+        provider = get_payment_provider(payment.provider)
+        lookup_id = payment.provider_payment_id or payment.provider_order_id
+        if not lookup_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "NO_PROVIDER_REFERENCE", "message": "Payment has no provider order or transaction reference."}
+            )
+
+        details = provider.get_payment_details(lookup_id)
+        if details.status == "captured":
+            payment.status = "SUCCESS"
+            if details.payment_id:
+                payment.provider_payment_id = details.payment_id
+                payment.transaction_reference = details.payment_id
+            payment.paid_at = datetime.now(timezone.utc)
+
+            invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).with_for_update().first()
+            if invoice and invoice.status != "voided":
+                invoice.paid_amount += payment.amount
+                invoice.balance = invoice.total - invoice.paid_amount
+                if invoice.balance <= Decimal('0.00'):
+                    invoice.balance = Decimal('0.00')
+                    invoice.status = "paid"
+                else:
+                    invoice.status = "partially_paid"
+
+            db.commit()
+            db.refresh(payment)
+
+            log_audit_event(
+                db=db,
+                action="PAYMENT_RECONCILED",
+                user=current_user,
+                entity_name="Payment",
+                entity_id=str(payment.id),
+                details={"status": "SUCCESS", "lookup_id": lookup_id},
+                request=request
+            )
+
+        return payment
+
+    @classmethod
+    def refund_payment(
+        cls,
+        db: Session,
+        payment_id: int,
+        data: PaymentRefundRequest,
+        current_user: User,
+        request: Optional[Request] = None
+    ) -> PaymentRefund:
+        """
+        Admin: Issue full or partial refund for a successful payment.
+        """
+        payment = db.query(Payment).filter(Payment.id == payment_id).with_for_update().first()
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment record not found."}
+            )
+
+        if payment.status != "SUCCESS":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "CANNOT_REFUND_NON_SUCCESS", "message": "Only successful payments can be refunded."}
+            )
+
+        refund_amount = Decimal(str(data.amount)) if data.amount is not None else payment.amount
+        if refund_amount <= Decimal('0.00') or refund_amount > payment.amount:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_REFUND_AMOUNT", "message": f"Refund amount must be between ₹0.01 and ₹{payment.amount:.2f}."}
+            )
+
+        provider = get_payment_provider(payment.provider)
+        lookup_id = payment.provider_payment_id or payment.transaction_reference or str(payment.id)
+        rfnd_res = provider.refund_payment(
+            provider_payment_id=lookup_id,
+            amount=refund_amount,
+            notes={"reason": data.reason or "Patient request"}
+        )
+
+        refund_entry = PaymentRefund(
+            payment_id=payment.id,
+            amount=refund_amount,
+            currency=payment.currency,
+            provider_refund_id=rfnd_res.refund_id,
+            reason=data.reason,
+            status="SUCCESS",
+            initiated_by_user_id=current_user.id
+        )
+        db.add(refund_entry)
+
+        # Adjust invoice balance
+        invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).with_for_update().first()
+        if invoice:
+            invoice.paid_amount -= refund_amount
+            invoice.balance = invoice.total - invoice.paid_amount
+            if invoice.paid_amount <= Decimal('0.00'):
+                invoice.status = "unpaid"
+            else:
+                invoice.status = "partially_paid"
+
+        if refund_amount == payment.amount:
+            payment.status = "REFUNDED"
+        else:
+            payment.status = "PARTIALLY_REFUNDED"
+
+        db.commit()
+        db.refresh(refund_entry)
+
+        log_audit_event(
+            db=db,
+            action="PAYMENT_REFUNDED",
+            user=current_user,
+            entity_name="Payment",
+            entity_id=str(payment.id),
+            details={"refund_id": refund_entry.id, "amount": str(refund_amount), "reason": data.reason},
+            request=request
+        )
+
+        return refund_entry
+
+    @classmethod
+    def get_payment_by_id(cls, db: Session, payment_id: int) -> Payment:
+        payment = db.query(Payment).filter(Payment.id == payment_id).first()
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment record not found."}
+            )
+        return payment
+
+    @classmethod
+    def get_receipt_pdf(cls, db: Session, payment_id: int) -> bytes:
+        payment = cls.get_payment_by_id(db, payment_id)
+        if payment.status != "SUCCESS":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "RECEIPT_NOT_AVAILABLE", "message": "Receipts are only available for successfully settled payments."}
+            )
+        return generate_payment_receipt_pdf(payment, payment.invoice, payment.patient)
+

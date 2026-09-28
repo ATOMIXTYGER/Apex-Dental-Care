@@ -18,7 +18,8 @@ import {
   Plus,
   ArrowLeft,
   CheckCircle2,
-  IndianRupee
+  IndianRupee,
+  CreditCard
 } from 'lucide-react';
 import { formatINR, formatDateIN, formatDateTimeIN } from '../utils/formatters';
 import {
@@ -51,6 +52,7 @@ import { TreatmentPlanModal } from '../components/treatments/TreatmentPlanModal'
 import { PrescriptionModal } from '../components/prescriptions/PrescriptionModal';
 import { InvoiceModal } from '../components/billing/InvoiceModal';
 import { PaymentModal } from '../components/billing/PaymentModal';
+import { OnlinePaymentModal } from '../components/billing/OnlinePaymentModal';
 import { DocumentUploadModal } from '../components/documents/DocumentUploadModal';
 import { FollowUpModal } from '../components/followups/FollowUpModal';
 import { AppointmentModal } from '../components/appointments/AppointmentModal';
@@ -85,6 +87,7 @@ export const PatientDetail: React.FC = () => {
   const [isRxModalOpen, setIsRxModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
+  const [onlinePaymentInvoice, setOnlinePaymentInvoice] = useState<Invoice | null>(null);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [isFollowupModalOpen, setIsFollowupModalOpen] = useState(false);
   const [isApptModalOpen, setIsApptModalOpen] = useState(false);
@@ -611,13 +614,24 @@ export const PatientDetail: React.FC = () => {
                       </div>
 
                       {hasRole('admin', 'receptionist') && Number(inv.balance) > 0 && (
-                        <button
-                          onClick={() => setPaymentInvoice(inv)}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm"
-                        >
-                          <IndianRupee className="w-3.5 h-3.5" />
-                          <span>Record Payment</span>
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setOnlinePaymentInvoice(inv)}
+                            className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm transition-all"
+                            title="Process secure online payment gateway checkout"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>Pay Online</span>
+                          </button>
+                          <button
+                            onClick={() => setPaymentInvoice(inv)}
+                            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm transition-all"
+                            title="Record offline cash/card/UPI payment"
+                          >
+                            <IndianRupee className="w-3.5 h-3.5" />
+                            <span>Manual Pay</span>
+                          </button>
+                        </div>
                       )}
 
                       <button
@@ -664,13 +678,44 @@ export const PatientDetail: React.FC = () => {
                         {inv.payments.map((pay) => (
                           <div
                             key={pay.id}
-                            className="flex items-center justify-between text-xs p-2 bg-slate-50 rounded-lg border border-slate-100"
+                            className="flex items-center justify-between text-xs p-2 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100/70 transition-colors"
                           >
-                            <span className="text-slate-600 font-medium">
-                              {formatDateIN(pay.payment_date)} • {pay.payment_method.toUpperCase()}
-                              {pay.transaction_reference && ` (${pay.transaction_reference})`}
-                            </span>
-                            <span className="font-bold text-emerald-600">+{formatINR(pay.amount)}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-600 font-medium">
+                                {formatDateIN(pay.payment_date)} • {pay.payment_method.toUpperCase()}
+                                {pay.provider && (
+                                  <span className="ml-1 text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded border border-indigo-100">
+                                    {pay.provider.toUpperCase()}
+                                  </span>
+                                )}
+                                {pay.status && (
+                                  <span
+                                    className={`ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                      pay.status === 'SUCCESS'
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                        : pay.status === 'PENDING'
+                                        ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                                        : 'bg-rose-50 text-rose-700 border border-rose-100'
+                                    }`}
+                                  >
+                                    {pay.status}
+                                  </span>
+                                )}
+                                {pay.transaction_reference && ` (${pay.transaction_reference})`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-emerald-600">+{formatINR(pay.amount)}</span>
+                              {pay.status === 'SUCCESS' && (
+                                <button
+                                  onClick={() => billingApi.downloadReceiptPdf(pay.id, pay.transaction_reference || String(pay.id))}
+                                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-0.5 px-2 py-0.5 bg-white rounded border border-slate-200 hover:border-indigo-300 transition-colors"
+                                  title="Download Official Receipt PDF"
+                                >
+                                  <Download className="w-3 h-3" /> Receipt
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1027,6 +1072,16 @@ export const PatientDetail: React.FC = () => {
           invoice={paymentInvoice}
           isOpen={!!paymentInvoice}
           onClose={() => setPaymentInvoice(null)}
+          onSuccess={loadPatientData}
+        />
+      )}
+
+      {/* Online Payment Modal */}
+      {onlinePaymentInvoice && (
+        <OnlinePaymentModal
+          invoice={onlinePaymentInvoice}
+          isOpen={!!onlinePaymentInvoice}
+          onClose={() => setOnlinePaymentInvoice(null)}
           onSuccess={loadPatientData}
         />
       )}

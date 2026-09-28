@@ -34,12 +34,58 @@ class PaymentCreate(BaseModel):
     transaction_reference: Optional[str] = None
     notes: Optional[str] = None
 
+class PaymentOrderCreate(BaseModel):
+    amount: Optional[Decimal] = Field(default=None, gt=Decimal('0.00'))
+    idempotency_key: Optional[str] = Field(default=None, max_length=100)
+
+class PaymentOrderResponse(BaseModel):
+    order_id: str
+    internal_payment_id: int
+    invoice_id: int
+    amount: Decimal
+    currency: str
+    key_id: str
+    provider: str
+    clinic_name: str
+    patient_name: str
+    patient_email: Optional[str] = None
+    patient_phone: Optional[str] = None
+    is_test_mode: bool
+    notes: dict = {}
+
+class PaymentVerifyRequest(BaseModel):
+    internal_payment_id: int
+    provider_order_id: str
+    provider_payment_id: str
+    provider_signature: str
+    invoice_id: int
+
+class PaymentVerifyResponse(BaseModel):
+    success: bool
+    payment_id: int
+    invoice_id: int
+    amount: Decimal
+    currency: str
+    status: str
+    transaction_reference: str
+    balance_remaining: Decimal
+    receipt_url: str
+
+class PaymentRefundRequest(BaseModel):
+    amount: Optional[Decimal] = Field(default=None, gt=Decimal('0.00'))
+    reason: Optional[str] = None
+
 class PaymentResponse(BaseModel):
     id: int
     invoice_id: int
     patient_id: int
     amount: Decimal
+    currency: str = "INR"
     payment_method: str
+    status: str = "SUCCESS"
+    provider: str = "manual"
+    provider_order_id: Optional[str] = None
+    provider_payment_id: Optional[str] = None
     transaction_reference: Optional[str] = None
     payment_date: datetime
     notes: Optional[str] = None

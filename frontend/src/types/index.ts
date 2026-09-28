@@ -247,15 +247,51 @@ export interface InvoiceItem {
   total: number;
 }
 
+export type PaymentStatus = 'CREATED' | 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
+
 export interface Payment {
   id: number;
   invoice_id: number;
   patient_id: number;
   amount: number;
+  currency?: string;
   payment_method: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'other';
+  status?: PaymentStatus;
+  provider?: string;
+  provider_order_id?: string;
+  provider_payment_id?: string;
   transaction_reference?: string;
   payment_date: string;
+  paid_at?: string;
   notes?: string;
+}
+
+export interface PaymentOrderResponse {
+  order_id: string;
+  internal_payment_id: number;
+  invoice_id: number;
+  amount: number;
+  currency: string;
+  key_id: string;
+  provider: string;
+  clinic_name: string;
+  patient_name: string;
+  patient_email?: string;
+  patient_phone?: string;
+  is_test_mode: boolean;
+  notes?: Record<string, any>;
+}
+
+export interface PaymentVerifyResponse {
+  success: boolean;
+  payment_id: number;
+  invoice_id: number;
+  amount: number;
+  currency: string;
+  status: string;
+  transaction_reference: string;
+  balance_remaining: number;
+  receipt_url: string;
 }
 
 export interface Invoice {

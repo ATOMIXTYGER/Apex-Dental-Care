@@ -52,13 +52,54 @@ class Payment(Base):
     invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="RESTRICT"), nullable=False, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id", ondelete="RESTRICT"), nullable=False, index=True)
     amount = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(10), default="INR", nullable=False)
     payment_method = Column(String(50), nullable=False) # cash, card, upi, bank_transfer, other
     transaction_reference = Column(String(100), nullable=True)
     payment_date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     notes = Column(Text, nullable=True)
     received_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    # Online Payment Gateway Integration Fields
+    status = Column(String(30), default="SUCCESS", nullable=False, index=True) # CREATED, PENDING, PROCESSING, SUCCESS, FAILED, REFUNDED
+    provider = Column(String(50), default="manual", nullable=False, index=True) # manual, razorpay, mock
+    provider_order_id = Column(String(100), nullable=True, index=True)
+    provider_payment_id = Column(String(100), nullable=True, index=True)
+    provider_signature = Column(String(255), nullable=True)
+    idempotency_key = Column(String(100), unique=True, nullable=True, index=True)
+    failure_reason = Column(Text, nullable=True)
+    paid_at = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     invoice = relationship("Invoice", back_populates="payments")
     patient = relationship("Patient")
     received_by = relationship("User")
+    refunds = relationship("PaymentRefund", back_populates="payment", cascade="all, delete-orphan")
+
+class PaymentWebhookEvent(Base):
+    __tablename__ = "payment_webhook_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    provider = Column(String(50), nullable=False, index=True)
+    event_id = Column(String(100), unique=True, nullable=False, index=True)
+    event_type = Column(String(100), nullable=False, index=True)
+    status = Column(String(30), default="processed", nullable=False) # processed, duplicate, failed
+    payload = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+class PaymentRefund(Base):
+    __tablename__ = "payment_refunds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    payment_id = Column(Integer, ForeignKey("payments.id", ondelete="CASCADE"), nullable=False, index=True)
+    amount = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(10), default="INR", nullable=False)
+    provider_refund_id = Column(String(100), nullable=True, index=True)
+    reason = Column(Text, nullable=True)
+    status = Column(String(30), default="SUCCESS", nullable=False) # SUCCESS, FAILED, PENDING
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    initiated_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    payment = relationship("Payment", back_populates="refunds")
+    initiated_by = relationship("User")

@@ -310,3 +310,128 @@ def generate_invoice_pdf(invoice, patient) -> bytes:
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
+
+
+def generate_payment_receipt_pdf(payment, invoice, patient) -> bytes:
+    """Generate a clean, professional dental payment receipt PDF."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+
+    styles = getSampleStyleSheet()
+    normal_style = styles['Normal']
+    bold_style = ParagraphStyle('BoldNormal', parent=normal_style, fontName='Helvetica-Bold')
+
+    story = []
+    story.extend(get_clinic_header(styles))
+
+    # Receipt Title Box
+    receipt_title_style = ParagraphStyle(
+        'ReceiptTitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        leading=16,
+        textColor=colors.HexColor('#0d9488'),
+        fontName='Helvetica-Bold',
+        alignment=1, # Center
+        spaceAfter=10
+    )
+    story.append(Paragraph("OFFICIAL PAYMENT RECEIPT", receipt_title_style))
+
+    # Meta Table: Patient & Receipt Details
+    receipt_num = f"RCPT-2026-{payment.id:05d}"
+    pay_time_str = payment.payment_date.strftime('%d-%b-%Y %I:%M %p')
+
+    meta_table_data = [
+        [
+            Paragraph(
+                f"<b>Received From:</b><br/>"
+                f"<b>{patient.full_name}</b><br/>"
+                f"Patient ID: {patient.patient_code}<br/>"
+                f"Phone: {patient.phone}",
+                normal_style
+            ),
+            Paragraph(
+                f"<b>Receipt No:</b> {receipt_num}<br/>"
+                f"<b>Payment Date:</b> {pay_time_str}<br/>"
+                f"<b>Invoice Reference:</b> {invoice.invoice_number}<br/>"
+                f"<b>Status:</b> <font color='#10b981'><b>SUCCESS</b></font>",
+                normal_style
+            )
+        ]
+    ]
+    t_meta = Table(meta_table_data, colWidths=[270, 270])
+    t_meta.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#f8fafc')),
+        ('PADDING', (0,0), (-1,-1), 8),
+        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+    ]))
+    story.append(t_meta)
+    story.append(Spacer(1, 15))
+
+    # Payment Breakdown Box
+    method_display = payment.payment_method.upper()
+    provider_display = (payment.provider or "Manual").capitalize()
+    txn_ref = payment.transaction_reference or payment.provider_payment_id or "N/A"
+
+    payment_rows = [
+        [Paragraph("<b>Item / Detail</b>", bold_style), Paragraph("<b>Information</b>", bold_style)],
+        [Paragraph("Payment Channel / Provider", normal_style), Paragraph(f"{provider_display} ({method_display})", normal_style)],
+        [Paragraph("Transaction Reference", normal_style), Paragraph(f"<code>{txn_ref}</code>", normal_style)],
+        [Paragraph("Total Invoice Amount", normal_style), Paragraph(f"₹{invoice.total:.2f}", normal_style)],
+        [Paragraph("Amount Paid This Transaction", bold_style), Paragraph(f"<font color='#0d9488'><b>₹{payment.amount:.2f}</b></font>", bold_style)],
+        [Paragraph("Remaining Invoice Balance", bold_style), Paragraph(f"<b>₹{invoice.balance:.2f}</b>", bold_style)]
+    ]
+
+    t_payment = Table(payment_rows, colWidths=[240, 300])
+    t_payment.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0d9488')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
+        ('PADDING', (0,0), (-1,-1), 8),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#f8fafc')])
+    ]))
+    story.append(t_payment)
+    story.append(Spacer(1, 20))
+
+    if payment.notes:
+        story.append(Paragraph(f"<b>Receipt Notes:</b> {payment.notes}", normal_style))
+        story.append(Spacer(1, 12))
+
+    # Verification notice & Authorized Stamp
+    sig_data = [
+        [
+            Paragraph(
+                "<i>* This is an electronically generated official receipt verified by our clinic billing system.<br/>"
+                "* Eligible for medical claim reimbursement and dental healthcare allowances.</i>",
+                ParagraphStyle('Foot', parent=normal_style, fontSize=8, textColor=colors.gray)
+            ),
+            Paragraph(
+                "____________________________________<br/>"
+                f"<b>{settings.CLINIC_NAME}</b><br/>"
+                "Authorized Accounts & Cashier",
+                ParagraphStyle('Sig', parent=normal_style, alignment=2)
+            )
+        ]
+    ]
+    t_sig = Table(sig_data, colWidths=[310, 230])
+    t_sig.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'BOTTOM'),
+        ('PADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(Spacer(1, 25))
+    story.append(t_sig)
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+

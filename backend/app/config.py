@@ -59,6 +59,14 @@ class Settings(BaseSettings):
     CLINIC_EMAIL: str = "contact@apexdental.in"
     CLINIC_WEBSITE: str = "www.apexdental.in"
     CLINIC_REG_NO: str = "GSTIN: 29AAAAA0000A1Z5 | DCI-REG-8849"
+
+    # Payment Gateway Settings
+    PAYMENT_PROVIDER: str = Field(default="razorpay")  # 'razorpay' or 'mock'
+    PAYMENT_MODE: str = Field(default="test")          # 'test' or 'live'
+    PAYMENT_KEY_ID: str = Field(default="rzp_test_ApexDentalSandboxKey")
+    PAYMENT_KEY_SECRET: str = Field(default="apex_dental_razorpay_secret_key_98231")
+    PAYMENT_WEBHOOK_SECRET: str = Field(default="apex_dental_webhook_secret_77219")
+    PAYMENT_CURRENCY: str = Field(default="INR")
     
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

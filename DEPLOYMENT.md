@@ -157,3 +157,40 @@ docker exec apex_dental_backend alembic upgrade head
 - **Liveness Probe:** `GET /api/v1/health` (Returns HTTP 200 if FastAPI process is responsive).
 - **Readiness Probe:** `GET /api/v1/health/ready` (Executes `SELECT 1` on active DB connection pool).
 - **Application Logs:** Structured JSON logs streamed to standard output, collected via Docker log driver or vector agent.
+
+---
+
+## 7. Online Payment Gateway & Webhook Setup
+
+### Production Webhook Endpoint
+Configure your payment provider (Razorpay / India Gateway) webhook destination to:
+```
+https://clinic.yourdomain.com/api/v1/billing/webhooks/razorpay
+```
+
+### Essential Nginx Reverse Proxy Directives
+To ensure cryptographic HMAC signature verification succeeds, Nginx must preserve the raw request body without buffering or modifying whitespace:
+```nginx
+location /api/v1/billing/webhooks/ {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Razorpay-Signature $http_x_razorpay_signature;
+    
+    # Preserve raw body stream for HMAC-SHA256 signature verification
+    proxy_pass_request_body on;
+    proxy_buffering off;
+}
+```
+
+### Required Production Environment Variables
+```ini
+PAYMENT_PROVIDER=razorpay
+PAYMENT_MODE=live
+PAYMENT_KEY_ID=rzp_live_your_actual_key_id
+PAYMENT_KEY_SECRET=your_production_secret_key
+PAYMENT_WEBHOOK_SECRET=your_configured_webhook_secret
+PAYMENT_CURRENCY=INR
+```

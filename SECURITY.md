@@ -83,6 +83,27 @@ Uploaded clinical documents and panoramic radiographs are protected through a 6-
 
 ---
 
-## 5. Security Vulnerability Reporting
+## 5. Payment Gateway Security Architecture
+
+Online financial transactions follow a defense-in-depth model where the application database is the sole authoritative ledger:
+
+1. **Cryptographic Server-Side Verification:**
+   - Client-reported payment status is **never trusted**.
+   - Razorpay payment signatures are validated using constant-time comparison (`hmac.compare_digest`) computing `HMAC_SHA256(order_id + "|" + payment_id, key_secret)`.
+2. **Raw Body Webhook Authentication:**
+   - Webhook payloads are verified against `PAYMENT_WEBHOOK_SECRET` using the exact raw HTTP request body bytes before JSON deserialization. Unsigned or tampered webhooks fail with HTTP 400.
+3. **Idempotency & Replay Attack Defense:**
+   - Gateway order creation is deduplicated via unique `idempotency_key`.
+   - Webhook deliveries are tracked in `payment_webhook_events` with unique event ID constraints. Duplicate webhooks return `200 OK` without re-crediting invoices.
+4. **Race Conditions & Overpayment Prevention:**
+   - Database operations use atomic transactions with row-level locking (`with_for_update`).
+   - Overpayment or negative balance requests are blocked by server-side Decimal checks.
+5. **Credential & Secret Isolation:**
+   - `PAYMENT_KEY_SECRET` and `PAYMENT_WEBHOOK_SECRET` are stored exclusively in backend environment variables.
+   - Secrets are masked from all audit logs and are never exposed to frontend bundles.
+
+---
+
+## 6. Security Vulnerability Reporting
 
 To report a suspected security vulnerability, please contact our security team at `security@apexdental.com`. We respond within 24 hours and practice coordinated disclosure.

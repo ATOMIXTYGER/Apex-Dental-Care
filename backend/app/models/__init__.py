@@ -6,7 +6,7 @@ from app.models.clinical import Visit
 from app.models.dental_chart import ToothCondition, ToothConditionHistory, FDI_PERMANENT_TEETH
 from app.models.treatment import TreatmentPlan, TreatmentItem, ProcedureCatalog
 from app.models.prescription import Prescription, PrescriptionItem, MedicineCatalog
-from app.models.billing import Invoice, InvoiceItem, Payment
+from app.models.billing import Invoice, InvoiceItem, Payment, PaymentWebhookEvent, PaymentRefund
 from app.models.document import Document
 from app.models.followup import FollowUp
 from app.models.audit import AuditLog
@@ -34,6 +34,8 @@ __all__ = [
     "Invoice",
     "InvoiceItem",
     "Payment",
+    "PaymentWebhookEvent",
+    "PaymentRefund",
     "Document",
     "FollowUp",
     "AuditLog"
