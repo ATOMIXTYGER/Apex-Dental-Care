@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, status, HTTPException
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 from app.database import get_db
 
 router = APIRouter(tags=["Health & Diagnostics"])
@@ -22,8 +22,8 @@ def readiness(db: Session = Depends(get_db)):
             "database": "connected",
             "service": "dental-api"
         }
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"code": "DATABASE_UNAVAILABLE", "message": "Database ping failed."}
-        )
+        ) from exc

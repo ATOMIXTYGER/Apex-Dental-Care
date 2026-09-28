@@ -1,14 +1,15 @@
-from typing import Optional, List
 from pathlib import Path
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from fastapi import UploadFile, HTTPException, status, Request
 
+from fastapi import HTTPException, Request, UploadFile, status
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
 from app.models.document import Document
 from app.models.patient import Patient
 from app.models.user import User
 from app.storage.file_storage import file_storage
-from app.audit.service import log_audit_event
+
 
 class DocumentService:
     @staticmethod
@@ -18,9 +19,9 @@ class DocumentService:
         document_type: str,
         file: UploadFile,
         current_user: User,
-        visit_id: Optional[int] = None,
-        notes: Optional[str] = None,
-        request: Optional[Request] = None
+        visit_id: int | None = None,
+        notes: str | None = None,
+        request: Request | None = None
     ) -> Document:
         patient = db.query(Patient).filter(Patient.id == patient_id, Patient.is_deleted == False).first()
         if not patient:
@@ -70,18 +71,18 @@ class DocumentService:
         return doc
 
     @staticmethod
-    def get_patient_documents(db: Session, patient_id: int) -> List[Document]:
+    def get_patient_documents(db: Session, patient_id: int) -> list[Document]:
         return db.query(Document).filter(Document.patient_id == patient_id).order_by(desc(Document.created_at)).all()
 
     @staticmethod
-    def get_all_documents(db: Session, document_type: Optional[str] = None) -> List[Document]:
+    def get_all_documents(db: Session, document_type: str | None = None) -> list[Document]:
         query = db.query(Document)
         if document_type:
             query = query.filter(Document.document_type == document_type)
         return query.order_by(desc(Document.created_at)).all()
 
     @classmethod
-    def get_file_path(cls, db: Session, document_id: int, current_user: User, request: Optional[Request] = None) -> Path:
+    def get_file_path(cls, db: Session, document_id: int, current_user: User, request: Request | None = None) -> Path:
         doc = cls.get_document_by_id(db, document_id)
         path = file_storage.get_file_path(doc.file_name)
 

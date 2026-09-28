@@ -1,29 +1,27 @@
-import io
 import csv
+import io
 from datetime import date
-from typing import Optional, List, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from typing import Any
 
-from app.models.patient import Patient
-from app.models.appointment import Appointment
-from app.models.treatment import TreatmentItem
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
 from app.models.billing import Invoice, Payment
-from app.models.followup import FollowUp
+
 
 class ReportService:
     @staticmethod
     def get_revenue_report(
         db: Session,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None
-    ) -> List[Dict[str, Any]]:
+        start_date: date | None = None,
+        end_date: date | None = None
+    ) -> list[dict[str, Any]]:
         query = db.query(Payment)
         if start_date:
             query = query.filter(Payment.payment_date >= start_date)
         if end_date:
             query = query.filter(Payment.payment_date <= end_date)
-            
+
         payments = query.order_by(desc(Payment.payment_date)).all()
         return [
             {
@@ -39,7 +37,7 @@ class ReportService:
         ]
 
     @staticmethod
-    def get_outstanding_report(db: Session) -> List[Dict[str, Any]]:
+    def get_outstanding_report(db: Session) -> list[dict[str, Any]]:
         invoices = db.query(Invoice).filter(
             Invoice.status.in_(["unpaid", "partially_paid"])
         ).order_by(desc(Invoice.balance)).all()
@@ -60,7 +58,7 @@ class ReportService:
         ]
 
     @staticmethod
-    def export_csv(headers: List[str], rows: List[List[Any]]) -> str:
+    def export_csv(headers: list[str], rows: list[list[Any]]) -> str:
         """Render rows to CSV string."""
         output = io.StringIO()
         writer = csv.writer(output)

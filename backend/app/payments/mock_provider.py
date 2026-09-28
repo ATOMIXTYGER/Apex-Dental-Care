@@ -1,16 +1,17 @@
-import hmac
 import hashlib
+import hmac
 import secrets
 from decimal import Decimal
-from typing import Optional, Dict, Any
+from typing import Any
 
 from app.payments.provider import (
     BasePaymentProvider,
+    PaymentDetailsResult,
     PaymentOrderResult,
     PaymentVerificationResult,
-    PaymentDetailsResult,
-    RefundResult
+    RefundResult,
 )
+
 
 class MockSandboxProvider(BasePaymentProvider):
     """
@@ -35,7 +36,7 @@ class MockSandboxProvider(BasePaymentProvider):
         amount: Decimal,
         currency: str = "INR",
         receipt: str = "",
-        notes: Optional[Dict[str, Any]] = None
+        notes: dict[str, Any] | None = None
     ) -> PaymentOrderResult:
         order_id = f"order_mock_{secrets.token_hex(8)}"
         return PaymentOrderResult(
@@ -64,7 +65,7 @@ class MockSandboxProvider(BasePaymentProvider):
                 error_message="Simulated signature invalid."
             )
 
-        msg = f"{order_id}|{payment_id}".encode("utf-8")
+        msg = f"{order_id}|{payment_id}".encode()
         expected_sig = hmac.new(self._secret.encode("utf-8"), msg, hashlib.sha256).hexdigest()
 
         # In mock provider, either exact HMAC match or standard mock signature prefix is accepted
@@ -105,7 +106,7 @@ class MockSandboxProvider(BasePaymentProvider):
         self,
         provider_payment_id: str,
         amount: Decimal,
-        notes: Optional[Dict[str, Any]] = None
+        notes: dict[str, Any] | None = None
     ) -> RefundResult:
         refund_id = f"rfnd_mock_{secrets.token_hex(8)}"
         return RefundResult(

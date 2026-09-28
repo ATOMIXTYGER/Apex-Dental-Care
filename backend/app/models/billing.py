@@ -1,8 +1,20 @@
-from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, Text, Numeric
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from decimal import Decimal
+
+from sqlalchemy import (
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
+from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 class Invoice(Base):
     __tablename__ = "invoices"
@@ -14,18 +26,18 @@ class Invoice(Base):
     treatment_plan_id = Column(Integer, ForeignKey("treatment_plans.id", ondelete="SET NULL"), nullable=True)
     issue_date = Column(Date, nullable=False)
     due_date = Column(Date, nullable=False)
-    
+
     subtotal = Column(Numeric(10, 2), default=Decimal('0.00'), nullable=False)
     discount = Column(Numeric(10, 2), default=Decimal('0.00'), nullable=False)
     tax = Column(Numeric(10, 2), default=Decimal('0.00'), nullable=False)
     total = Column(Numeric(10, 2), default=Decimal('0.00'), nullable=False)
     paid_amount = Column(Numeric(10, 2), default=Decimal('0.00'), nullable=False)
     balance = Column(Numeric(10, 2), default=Decimal('0.00'), nullable=False)
-    
+
     status = Column(String(50), default="unpaid", nullable=False, index=True) # unpaid, partially_paid, paid, voided
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     patient = relationship("Patient", back_populates="invoices")
     visit = relationship("Visit", back_populates="invoices")
@@ -55,7 +67,7 @@ class Payment(Base):
     currency = Column(String(10), default="INR", nullable=False)
     payment_method = Column(String(50), nullable=False) # cash, card, upi, bank_transfer, other
     transaction_reference = Column(String(100), nullable=True)
-    payment_date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    payment_date = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     notes = Column(Text, nullable=True)
     received_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
@@ -69,8 +81,8 @@ class Payment(Base):
     failure_reason = Column(Text, nullable=True)
     paid_at = Column(DateTime, nullable=True)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     invoice = relationship("Invoice", back_populates="payments")
     patient = relationship("Patient")
@@ -86,7 +98,7 @@ class PaymentWebhookEvent(Base):
     event_type = Column(String(100), nullable=False, index=True)
     status = Column(String(30), default="processed", nullable=False) # processed, duplicate, failed
     payload = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
 class PaymentRefund(Base):
     __tablename__ = "payment_refunds"
@@ -98,7 +110,7 @@ class PaymentRefund(Base):
     provider_refund_id = Column(String(100), nullable=True, index=True)
     reason = Column(Text, nullable=True)
     status = Column(String(30), default="SUCCESS", nullable=False) # SUCCESS, FAILED, PENDING
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     initiated_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     payment = relationship("Payment", back_populates="refunds")

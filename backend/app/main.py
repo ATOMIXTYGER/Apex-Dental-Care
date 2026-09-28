@@ -1,27 +1,42 @@
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from fastapi.exceptions import RequestValidationError
 
-from app.config import settings
-from app.database import engine, Base
 # Import all models to register with Base
-import app.models # noqa: F401
+import app.models
+from app.config import settings
+from app.database import Base, engine
+from app.middleware.audit_middleware import RequestCorrelationMiddleware
+from app.middleware.error_handler import (
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 
 # Middlewares & Handlers
 from app.middleware.security_headers import SecurityHeadersMiddleware
-from app.middleware.audit_middleware import RequestCorrelationMiddleware
-from app.middleware.error_handler import (
-    http_exception_handler, validation_exception_handler, unhandled_exception_handler
-)
 
 # Routers
 from app.routers import (
-    auth, users, patients, appointments, visits, dental_chart,
-    treatments, prescriptions, documents, billing, followups,
-    dashboard, reports, audit, health
+    appointments,
+    audit,
+    auth,
+    billing,
+    dashboard,
+    dental_chart,
+    documents,
+    followups,
+    health,
+    patients,
+    prescriptions,
+    reports,
+    treatments,
+    users,
+    visits,
 )
 
 # Configure logging

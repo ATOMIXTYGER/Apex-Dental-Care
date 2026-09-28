@@ -1,15 +1,16 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional, List
 from datetime import date, datetime
 
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+
 class MedicalHistoryBase(BaseModel):
-    allergies: Optional[str] = None
-    medical_conditions: Optional[str] = None
-    current_medications: Optional[str] = None
-    past_surgeries: Optional[str] = None
+    allergies: str | None = None
+    medical_conditions: str | None = None
+    current_medications: str | None = None
+    past_surgeries: str | None = None
     bleeding_disorders: bool = False
     is_pregnant: bool = False
-    notes: Optional[str] = None
+    notes: str | None = None
 
 class MedicalHistoryResponse(MedicalHistoryBase):
     id: int
@@ -18,13 +19,13 @@ class MedicalHistoryResponse(MedicalHistoryBase):
     model_config = ConfigDict(from_attributes=True)
 
 class DentalHistoryBase(BaseModel):
-    chief_complaint: Optional[str] = None
-    past_dental_treatments: Optional[str] = None
-    brushing_frequency: Optional[str] = "Twice daily"
+    chief_complaint: str | None = None
+    past_dental_treatments: str | None = None
+    brushing_frequency: str | None = "Twice daily"
     flossing: bool = False
-    habits: Optional[str] = None
-    dental_anxiety_level: Optional[str] = "None"
-    notes: Optional[str] = None
+    habits: str | None = None
+    dental_anxiety_level: str | None = "None"
+    notes: str | None = None
 
 class DentalHistoryResponse(DentalHistoryBase):
     id: int
@@ -38,29 +39,29 @@ class PatientBase(BaseModel):
     date_of_birth: date
     gender: str = Field(pattern="^(Male|Female|Other)$")
     phone: str = Field(min_length=5, max_length=50)
-    email: Optional[EmailStr] = None
-    address: Optional[str] = None
-    emergency_contact_name: Optional[str] = None
-    emergency_contact_phone: Optional[str] = None
-    blood_group: Optional[str] = None
+    email: EmailStr | None = None
+    address: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    blood_group: str | None = None
 
 class PatientCreate(PatientBase):
-    medical_history: Optional[MedicalHistoryBase] = None
-    dental_history: Optional[DentalHistoryBase] = None
+    medical_history: MedicalHistoryBase | None = None
+    dental_history: DentalHistoryBase | None = None
 
 class PatientUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    date_of_birth: Optional[date] = None
-    gender: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[EmailStr] = None
-    address: Optional[str] = None
-    emergency_contact_name: Optional[str] = None
-    emergency_contact_phone: Optional[str] = None
-    blood_group: Optional[str] = None
-    medical_history: Optional[MedicalHistoryBase] = None
-    dental_history: Optional[DentalHistoryBase] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    date_of_birth: date | None = None
+    gender: str | None = None
+    phone: str | None = None
+    email: EmailStr | None = None
+    address: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    blood_group: str | None = None
+    medical_history: MedicalHistoryBase | None = None
+    dental_history: DentalHistoryBase | None = None
 
 class PatientListItem(PatientBase):
     id: int
@@ -73,6 +74,6 @@ class PatientDetailResponse(PatientBase):
     patient_code: str
     created_at: datetime
     updated_at: datetime
-    medical_history: Optional[MedicalHistoryResponse] = None
-    dental_history: Optional[DentalHistoryResponse] = None
+    medical_history: MedicalHistoryResponse | None = None
+    dental_history: DentalHistoryResponse | None = None
     model_config = ConfigDict(from_attributes=True)

@@ -1,20 +1,23 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, status, HTTPException
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.audit.service import log_audit_event
 from app.database import get_db
-from app.models.user import User, Dentist
-from app.schemas.user import UserCreate, UserUpdate, UserResponse, DentistProfileResponse
-from app.schemas.common import MessageResponse
+from app.models.user import Dentist, User
+from app.schemas.user import (
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
 from app.security.dependencies import get_current_user, require_roles
 from app.security.hashing import hash_password
-from app.audit.service import log_audit_event
 
 router = APIRouter(prefix="/users", tags=["User Management"])
 
-@router.get("", response_model=List[UserResponse])
+@router.get("", response_model=list[UserResponse])
 def get_users(
-    role: Optional[str] = None,
+    role: str | None = None,
     current_user: User = Depends(require_roles("admin")),
     db: Session = Depends(get_db)
 ):
@@ -24,7 +27,7 @@ def get_users(
         query = query.filter(User.role == role)
     return [UserResponse.model_validate(u) for u in query.all()]
 
-@router.get("/dentists", response_model=List[UserResponse])
+@router.get("/dentists", response_model=list[UserResponse])
 def get_active_dentists(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)

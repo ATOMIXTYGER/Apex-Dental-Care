@@ -1,18 +1,24 @@
 import io
-from datetime import datetime
-from decimal import Decimal
-from reportlab.lib.pagesizes import letter
+
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import (
+    HRFlowable,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 from app.config import settings
+
 
 def get_clinic_header(styles) -> list:
     """Reusable clinic branding header."""
     header_elements = []
-    
+
     clinic_title_style = ParagraphStyle(
         'ClinicTitle',
         parent=styles['Heading1'],
@@ -22,7 +28,7 @@ def get_clinic_header(styles) -> list:
         fontName='Helvetica-Bold',
         spaceAfter=2
     )
-    
+
     clinic_sub_style = ParagraphStyle(
         'ClinicSub',
         parent=styles['Normal'],
@@ -30,13 +36,13 @@ def get_clinic_header(styles) -> list:
         leading=11,
         textColor=colors.HexColor('#4b5563')
     )
-    
+
     header_elements.append(Paragraph(settings.CLINIC_NAME, clinic_title_style))
     header_elements.append(Paragraph(f"{settings.CLINIC_ADDRESS} | Phone: {settings.CLINIC_PHONE}", clinic_sub_style))
     header_elements.append(Paragraph(f"Email: {settings.CLINIC_EMAIL} | Reg No: {settings.CLINIC_REG_NO}", clinic_sub_style))
     header_elements.append(Spacer(1, 8))
     header_elements.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#0d9488'), spaceBefore=2, spaceAfter=12))
-    
+
     return header_elements
 
 
@@ -196,7 +202,7 @@ def generate_invoice_pdf(invoice, patient) -> bytes:
 
     # Invoice Header Title & Meta
     status_color = colors.HexColor('#10b981') if invoice.status == 'paid' else (colors.HexColor('#f59e0b') if invoice.status == 'partially_paid' else colors.HexColor('#ef4444'))
-    
+
     meta_table_data = [
         [
             Paragraph(
@@ -273,7 +279,7 @@ def generate_invoice_pdf(invoice, patient) -> bytes:
         ('PADDING', (0,0), (-1,-1), 4),
         ('LINEBELOW', (0,3), (-1,3), 1, colors.HexColor('#0d9488')),
     ]))
-    
+
     # Wrap totals in outer alignment container
     outer_table = Table([[Paragraph("", normal_style), t_totals]], colWidths=[320, 220])
     outer_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))

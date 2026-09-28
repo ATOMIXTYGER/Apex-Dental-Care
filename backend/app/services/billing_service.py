@@ -1,27 +1,36 @@
+import hashlib
 import json
+from datetime import date, datetime, UTC
 from decimal import Decimal
-from datetime import date, datetime, timezone
-from typing import Optional, List, Tuple, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
-from fastapi import HTTPException, status, Request
+from typing import Any
 
+from fastapi import HTTPException, Request, status
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
 from app.config import settings
-from app.models.billing import Invoice, InvoiceItem, Payment, PaymentWebhookEvent, PaymentRefund
+from app.models.billing import (
+    Invoice,
+    InvoiceItem,
+    Payment,
+    PaymentRefund,
+    PaymentWebhookEvent,
+)
 from app.models.patient import Patient
 from app.models.user import User
+from app.payments.factory import get_payment_provider
+from app.pdf.generator import generate_invoice_pdf, generate_payment_receipt_pdf
 from app.schemas.billing import (
     InvoiceCreate,
     PaymentCreate,
     PaymentOrderCreate,
     PaymentOrderResponse,
+    PaymentRefundRequest,
     PaymentVerifyRequest,
     PaymentVerifyResponse,
-    PaymentRefundRequest,
 )
-from app.pdf.generator import generate_invoice_pdf, generate_payment_receipt_pdf
-from app.audit.service import log_audit_event
-from app.payments.factory import get_payment_provider
+
 
 class BillingService:
     @staticmethod
@@ -35,7 +44,7 @@ class BillingService:
         db: Session,
         data: InvoiceCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Invoice:
         patient = db.query(Patient).filter(Patient.id == data.patient_id, Patient.is_deleted == False).first()
         if not patient:
@@ -45,7 +54,7 @@ class BillingService:
             )
 
         invoice_num = cls._generate_invoice_number(db)
-        
+
         # Calculate subtotal using exact Decimals
         subtotal = Decimal('0.00')
         for item in data.items:
@@ -55,8 +64,7 @@ class BillingService:
         discount = Decimal(str(data.discount))
         tax = Decimal(str(data.tax))
         total = (subtotal - discount) + tax
-        if total < Decimal('0.00'):
-            total = Decimal('0.00')
+        total = max(total, Decimal('0.00'))
 
         invoice = Invoice(
             invoice_number=invoice_num,
@@ -109,7 +117,7 @@ class BillingService:
         db: Session,
         data: PaymentCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Payment:
         """
         Record a payment transaction with strict validation:
@@ -153,7 +161,7 @@ class BillingService:
             amount=pay_amount,
             payment_method=data.payment_method,
             transaction_reference=data.transaction_reference,
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             notes=data.notes,
             received_by_user_id=current_user.id
         )
@@ -187,9 +195,9 @@ class BillingService:
     @staticmethod
     def get_invoices(
         db: Session,
-        patient_id: Optional[int] = None,
-        status_filter: Optional[str] = None
-    ) -> List[Invoice]:
+        patient_id: int | None = None,
+        status_filter: str | None = None
+    ) -> list[Invoice]:
         query = db.query(Invoice)
         if patient_id:
             query = query.filter(Invoice.patient_id == patient_id)
@@ -219,7 +227,7 @@ class BillingService:
         invoice_id: int,
         data: PaymentOrderCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> PaymentOrderResponse:
         """
         Create a secure payment gateway order for an invoice.
@@ -319,7 +327,7 @@ class BillingService:
             provider=order_res.provider,
             provider_order_id=order_res.order_id,
             idempotency_key=data.idempotency_key,
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             received_by_user_id=current_user.id if current_user else None
         )
         db.add(payment)
@@ -364,7 +372,7 @@ class BillingService:
         db: Session,
         data: PaymentVerifyRequest,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> PaymentVerifyResponse:
         """
         Cryptographically verifies payment signature server-side.
@@ -454,8 +462,8 @@ class BillingService:
         payment.provider_payment_id = data.provider_payment_id
         payment.provider_signature = data.provider_signature
         payment.transaction_reference = data.provider_payment_id
-        payment.paid_at = datetime.now(timezone.utc)
-        payment.payment_date = datetime.now(timezone.utc)
+        payment.paid_at = datetime.now(UTC)
+        payment.payment_date = datetime.now(UTC)
 
         invoice.paid_amount += payment.amount
         invoice.balance = invoice.total - invoice.paid_amount
@@ -503,8 +511,8 @@ class BillingService:
         provider_name: str,
         raw_body: bytes,
         signature_header: str,
-        request: Optional[Request] = None
-    ) -> Dict[str, Any]:
+        request: Request | None = None
+    ) -> dict[str, Any]:
         """
         Process webhook notifications from the payment gateway.
         Validates raw HMAC-SHA256 signature and guarantees idempotent processing.
@@ -518,11 +526,11 @@ class BillingService:
 
         try:
             event_data = json.loads(raw_body.decode("utf-8"))
-        except Exception:
+        except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"code": "INVALID_WEBHOOK_PAYLOAD", "message": "Malformed JSON payload."}
-            )
+            ) from exc
 
         event_id = event_data.get("id") or event_data.get("event_id") or f"evt_{hashlib.md5(raw_body).hexdigest()}"
         event_type = event_data.get("event", "unknown")
@@ -555,7 +563,7 @@ class BillingService:
                     if pay_id:
                         payment.provider_payment_id = pay_id
                         payment.transaction_reference = pay_id
-                    payment.paid_at = datetime.now(timezone.utc)
+                    payment.paid_at = datetime.now(UTC)
 
                     if invoice and invoice.status != "voided":
                         invoice.paid_amount += payment.amount
@@ -593,7 +601,7 @@ class BillingService:
         db: Session,
         payment_id: int,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Payment:
         """
         Reconcile a pending payment status directly with the payment gateway.
@@ -622,7 +630,7 @@ class BillingService:
             if details.payment_id:
                 payment.provider_payment_id = details.payment_id
                 payment.transaction_reference = details.payment_id
-            payment.paid_at = datetime.now(timezone.utc)
+            payment.paid_at = datetime.now(UTC)
 
             invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).with_for_update().first()
             if invoice and invoice.status != "voided":
@@ -656,7 +664,7 @@ class BillingService:
         payment_id: int,
         data: PaymentRefundRequest,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> PaymentRefund:
         """
         Admin: Issue full or partial refund for a successful payment.

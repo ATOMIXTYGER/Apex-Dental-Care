@@ -1,16 +1,17 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
+
 
 class AuditLogResponse(BaseModel):
     id: int
-    user_id: Optional[int] = None
-    user_email: Optional[str] = None
+    user_id: int | None = None
+    user_email: str | None = None
     action: str
-    entity_name: Optional[str] = None
-    entity_id: Optional[str] = None
-    details: Optional[str] = None
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
+    entity_name: str | None = None
+    entity_id: str | None = None
+    details: str | None = None
+    ip_address: str | None = None
+    user_agent: str | None = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)

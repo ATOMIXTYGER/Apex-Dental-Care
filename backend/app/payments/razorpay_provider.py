@@ -1,19 +1,19 @@
-import hmac
 import hashlib
-import json
+import hmac
 import logging
 import secrets
 from decimal import Decimal
-from typing import Optional, Dict, Any
+from typing import Any
+
 import httpx
 
 from app.config import settings
 from app.payments.provider import (
     BasePaymentProvider,
+    PaymentDetailsResult,
     PaymentOrderResult,
     PaymentVerificationResult,
-    PaymentDetailsResult,
-    RefundResult
+    RefundResult,
 )
 
 logger = logging.getLogger("payments.razorpay")
@@ -27,10 +27,10 @@ class RazorpayProvider(BasePaymentProvider):
 
     def __init__(
         self,
-        key_id: Optional[str] = None,
-        key_secret: Optional[str] = None,
-        webhook_secret: Optional[str] = None,
-        is_test_mode: Optional[bool] = None
+        key_id: str | None = None,
+        key_secret: str | None = None,
+        webhook_secret: str | None = None,
+        is_test_mode: bool | None = None
     ):
         self.key_id = key_id or settings.PAYMENT_KEY_ID
         self.key_secret = key_secret or settings.PAYMENT_KEY_SECRET
@@ -51,7 +51,7 @@ class RazorpayProvider(BasePaymentProvider):
         amount: Decimal,
         currency: str = "INR",
         receipt: str = "",
-        notes: Optional[Dict[str, Any]] = None
+        notes: dict[str, Any] | None = None
     ) -> PaymentOrderResult:
         """
         Create a Razorpay order. Amount in INR is converted to paise (1 INR = 100 paise).
@@ -90,7 +90,7 @@ class RazorpayProvider(BasePaymentProvider):
                     else:
                         logger.warning(f"Razorpay API returned {resp.status_code}: {resp.text}. Falling back to sandbox order.")
             except Exception as e:
-                logger.error(f"Failed to connect to Razorpay API: {str(e)}. Generating local sandbox order.")
+                logger.error(f"Failed to connect to Razorpay API: {e!s}. Generating local sandbox order.")
 
         # Local sandbox / test mode order generation
         simulated_order_id = f"order_{secrets.token_hex(10)}"
@@ -134,7 +134,7 @@ class RazorpayProvider(BasePaymentProvider):
                 error_message="Missing order_id, payment_id, or signature."
             )
 
-        msg = f"{order_id}|{payment_id}".encode("utf-8")
+        msg = f"{order_id}|{payment_id}".encode()
         expected_sig = hmac.new(self.key_secret.encode("utf-8"), msg, hashlib.sha256).hexdigest()
 
         is_valid = hmac.compare_digest(expected_sig, signature)
@@ -198,7 +198,7 @@ class RazorpayProvider(BasePaymentProvider):
                             raw_response=data
                         )
             except Exception as e:
-                logger.error(f"Error fetching Razorpay payment {provider_payment_id}: {str(e)}")
+                logger.error(f"Error fetching Razorpay payment {provider_payment_id}: {e!s}")
 
         # Simulated captured payment details for sandbox / test runs
         return PaymentDetailsResult(
@@ -215,7 +215,7 @@ class RazorpayProvider(BasePaymentProvider):
         self,
         provider_payment_id: str,
         amount: Decimal,
-        notes: Optional[Dict[str, Any]] = None
+        notes: dict[str, Any] | None = None
     ) -> RefundResult:
         """
         Initiate full or partial refund.
@@ -246,7 +246,7 @@ class RazorpayProvider(BasePaymentProvider):
                             raw_response=data
                         )
             except Exception as e:
-                logger.error(f"Razorpay refund error: {str(e)}")
+                logger.error(f"Razorpay refund error: {e!s}")
 
         simulated_refund_id = f"rfnd_{secrets.token_hex(10)}"
         return RefundResult(

@@ -1,6 +1,16 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, UniqueConstraint
+from datetime import datetime, UTC
+
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+
 from app.database import Base
 
 # FDI permanent teeth set: 11-18, 21-28, 31-38, 41-48
@@ -18,12 +28,12 @@ class ToothCondition(Base):
     id = Column(Integer, primary_key=True, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, index=True)
     tooth_number = Column(Integer, nullable=False, index=True) # 11-48
-    current_condition = Column(String(50), nullable=False, default="healthy") 
+    current_condition = Column(String(50), nullable=False, default="healthy")
     # healthy, caries, missing, filled, crown, root_canal, extraction, fracture, sensitivity, mobility, bridge, implant, impacted, other
     severity = Column(String(50), nullable=True, default="none") # none, mild, moderate, severe
     surfaces = Column(String(50), nullable=True) # e.g. "MODBL", "O", "MO"
     notes = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     __table_args__ = (
         UniqueConstraint('patient_id', 'tooth_number', name='uq_patient_tooth'),
@@ -44,7 +54,7 @@ class ToothConditionHistory(Base):
     severity = Column(String(50), nullable=True)
     surfaces = Column(String(50), nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     visit = relationship("Visit", back_populates="tooth_conditions")
     dentist = relationship("Dentist")

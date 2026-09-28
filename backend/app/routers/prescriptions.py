@@ -1,19 +1,21 @@
-from typing import Optional, List
-from fastapi import APIRouter, Depends, status, Response, Request
+
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import User
 from app.models.prescription import MedicineCatalog
+from app.models.user import User
 from app.schemas.prescription import (
-    PrescriptionCreate, PrescriptionResponse, MedicineCatalogResponse
+    MedicineCatalogResponse,
+    PrescriptionCreate,
+    PrescriptionResponse,
 )
-from app.services.prescription_service import PrescriptionService
 from app.security.dependencies import get_current_user, require_roles
+from app.services.prescription_service import PrescriptionService
 
 router = APIRouter(prefix="/prescriptions", tags=["Prescription Management"])
 
-@router.get("/catalog", response_model=List[MedicineCatalogResponse])
+@router.get("/catalog", response_model=list[MedicineCatalogResponse])
 def get_medicine_catalog(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -22,10 +24,10 @@ def get_medicine_catalog(
     medicines = db.query(MedicineCatalog).order_by(MedicineCatalog.name).all()
     return [MedicineCatalogResponse.model_validate(m) for m in medicines]
 
-@router.get("", response_model=List[PrescriptionResponse])
+@router.get("", response_model=list[PrescriptionResponse])
 def list_prescriptions(
-    patient_id: Optional[int] = None,
-    dentist_id: Optional[int] = None,
+    patient_id: int | None = None,
+    dentist_id: int | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

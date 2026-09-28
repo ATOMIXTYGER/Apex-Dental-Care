@@ -1,7 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from datetime import datetime, UTC
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+
 from app.database import Base
+
 
 class Document(Base):
     __tablename__ = "documents"
@@ -17,7 +20,7 @@ class Document(Base):
     file_path = Column(String(500), nullable=False)
     notes = Column(Text, nullable=True)
     uploaded_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     patient = relationship("Patient", back_populates="documents")
     visit = relationship("Visit", back_populates="documents")

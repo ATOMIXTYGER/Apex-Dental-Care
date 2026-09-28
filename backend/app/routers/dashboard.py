@@ -1,12 +1,11 @@
-from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.dashboard import DashboardSummaryResponse, DashboardAnalyticsResponse
-from app.services.dashboard_service import DashboardService
+from app.schemas.dashboard import DashboardAnalyticsResponse, DashboardSummaryResponse
 from app.security.dependencies import get_current_user
+from app.services.dashboard_service import DashboardService
 
 router = APIRouter(prefix="/dashboard", tags=["Clinic Dashboard & Analytics"])
 

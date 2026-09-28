@@ -1,14 +1,15 @@
-from typing import Optional, List
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from fastapi import HTTPException, status, Request
 
-from app.models.clinical import Visit
+from fastapi import HTTPException, Request, status
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
 from app.models.appointment import Appointment
+from app.models.clinical import Visit
 from app.models.patient import Patient
 from app.models.user import Dentist, User
 from app.schemas.clinical import VisitCreate, VisitUpdate
-from app.audit.service import log_audit_event
+
 
 class ClinicalService:
     @staticmethod
@@ -16,7 +17,7 @@ class ClinicalService:
         db: Session,
         data: VisitCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Visit:
         """Record a dental visit and clinical examination."""
         # Validate patient
@@ -82,7 +83,7 @@ class ClinicalService:
         return visit
 
     @staticmethod
-    def get_patient_visits(db: Session, patient_id: int) -> List[Visit]:
+    def get_patient_visits(db: Session, patient_id: int) -> list[Visit]:
         return db.query(Visit).filter(Visit.patient_id == patient_id).order_by(desc(Visit.visit_date)).all()
 
     @staticmethod
@@ -91,7 +92,7 @@ class ClinicalService:
         visit_id: int,
         data: VisitUpdate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Visit:
         visit = ClinicalService.get_visit_by_id(db, visit_id)
         update_dict = data.model_dump(exclude_unset=True)

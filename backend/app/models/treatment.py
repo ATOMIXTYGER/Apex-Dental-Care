@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Numeric
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from decimal import Decimal
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 class ProcedureCatalog(Base):
     __tablename__ = "procedure_catalog"
@@ -24,8 +27,8 @@ class TreatmentPlan(Base):
     status = Column(String(50), default="active", nullable=False, index=True) # draft, active, completed, cancelled
     estimated_total = Column(Numeric(10, 2), default=Decimal('0.00'), nullable=False)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     patient = relationship("Patient", back_populates="treatment_plans")
     dentist = relationship("Dentist", back_populates="treatment_plans")
@@ -44,8 +47,8 @@ class TreatmentItem(Base):
     visit_id = Column(Integer, ForeignKey("visits.id", ondelete="SET NULL"), nullable=True)
     notes = Column(Text, nullable=True)
     completed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     treatment_plan = relationship("TreatmentPlan", back_populates="treatments")
     visit = relationship("Visit", back_populates="treatments")

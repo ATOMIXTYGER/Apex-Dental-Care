@@ -1,13 +1,14 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Tuple
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, status, Request
+from datetime import datetime, timedelta, UTC
 
-from app.models.user import User, RefreshToken
-from app.security.hashing import verify_password, hash_password
-from app.security.tokens import create_access_token, generate_refresh_token, hash_token
+from fastapi import HTTPException, Request, status
+from sqlalchemy.orm import Session
+
 from app.audit.service import log_audit_event
 from app.config import settings
+from app.models.user import RefreshToken, User
+from app.security.hashing import verify_password
+from app.security.tokens import create_access_token, generate_refresh_token, hash_token
+
 
 class AuthService:
     @staticmethod
@@ -15,8 +16,8 @@ class AuthService:
         db: Session,
         username_or_email: str,
         password: str,
-        request: Optional[Request] = None
-    ) -> Tuple[User, str, str]:
+        request: Request | None = None
+    ) -> tuple[User, str, str]:
         """Authenticate user with rate-limiting / lock protection."""
         user = db.query(User).filter(
             (User.email == username_or_email.lower()) | (User.username == username_or_email)
@@ -38,9 +39,9 @@ class AuthService:
             )
 
         # Check locked status
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if user.locked_until:
-            locked = user.locked_until.replace(tzinfo=timezone.utc) if user.locked_until.tzinfo is None else user.locked_until
+            locked = user.locked_until.replace(tzinfo=UTC) if user.locked_until.tzinfo is None else user.locked_until
             if locked > now:
                 log_audit_event(
                     db=db,
@@ -69,7 +70,7 @@ class AuthService:
                 details = "Account locked for 15 minutes due to 5 consecutive failures."
             else:
                 details = f"Failed attempts: {user.failed_login_attempts}"
-                
+
             db.commit()
             log_audit_event(
                 db=db,
@@ -77,7 +78,7 @@ class AuthService:
                 user=user,
                 entity_name="User",
                 entity_id=str(user.id),
-                details={"reason": "Password mismatch", "attempts": user.failed_login_attempts},
+                details={"reason": "Password mismatch", "attempts": user.failed_login_attempts, "info": details},
                 request=request
             )
             raise HTTPException(
@@ -120,11 +121,11 @@ class AuthService:
         return user, access_token, raw_refresh_token
 
     @staticmethod
-    def refresh_access_token(db: Session, raw_refresh_token: str) -> Tuple[User, str, str]:
+    def refresh_access_token(db: Session, raw_refresh_token: str) -> tuple[User, str, str]:
         """Validate refresh token and issue new token pair (Token Rotation)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         refresh_hash = hash_token(raw_refresh_token)
-        
+
         token_record = db.query(RefreshToken).filter(
             RefreshToken.token_hash == refresh_hash,
             RefreshToken.revoked == False
@@ -136,7 +137,7 @@ class AuthService:
                 detail={"code": "INVALID_REFRESH_TOKEN", "message": "Refresh token is invalid or expired."}
             )
 
-        exp = token_record.expires_at.replace(tzinfo=timezone.utc) if token_record.expires_at.tzinfo is None else token_record.expires_at
+        exp = token_record.expires_at.replace(tzinfo=UTC) if token_record.expires_at.tzinfo is None else token_record.expires_at
         if exp < now:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -169,14 +170,14 @@ class AuthService:
         return user, new_access_token, new_raw_refresh
 
     @staticmethod
-    def revoke_refresh_token(db: Session, raw_refresh_token: str, user: Optional[User] = None, request: Optional[Request] = None):
+    def revoke_refresh_token(db: Session, raw_refresh_token: str, user: User | None = None, request: Request | None = None):
         """Revoke a refresh token on logout."""
         refresh_hash = hash_token(raw_refresh_token)
         token_record = db.query(RefreshToken).filter(RefreshToken.token_hash == refresh_hash).first()
         if token_record:
             token_record.revoked = True
             db.commit()
-            
+
         if user:
             log_audit_event(
                 db=db,

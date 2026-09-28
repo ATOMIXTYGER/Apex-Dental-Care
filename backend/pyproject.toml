@@ -1,0 +1,36 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "alembic",
+    "build",
+    "dist",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes (syntax, undefined names, unused variables/imports)
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "B008",   # Do not perform function calls in argument defaults (FastAPI Depends/Query/Path design pattern)
+    "E501",   # Line too long (handled by visual wrap / code formatter)
+    "E712",   # Avoid equality comparisons to False/True (needed for SQLAlchemy binary expressions e.g. Model.is_deleted == False)
+    "SIM105", # Use contextlib.suppress instead of try-except-pass
+    "UP006",  # Use lowercase generics like list instead of List (preserves compatibility across versions)
+    "UP035",  # Deprecated typing imports
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Re-exports in __init__.py files are intentional package exports
+"**/__init__.py" = ["F401"]
+# Test fixtures and test cases often re-import or use loose assertions
+"tests/**" = ["F401", "F811", "B007"]

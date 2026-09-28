@@ -1,6 +1,7 @@
-import pytest
 import os
 import sys
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -10,7 +11,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.database import Base, get_db
 from app.main import app
-from app.config import settings
 from seeds.seed_data import seed_database
 
 # Use in-memory SQLite for tests to keep test runs fast and independent
@@ -39,9 +39,9 @@ def db_session():
     connection = test_engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-    
+
     yield session
-    
+
     session.close()
     transaction.rollback()
     connection.close()

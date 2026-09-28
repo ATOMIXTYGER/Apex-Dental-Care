@@ -1,8 +1,9 @@
-from fastapi import Request, status
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 import logging
+
+from fastapi import Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger("dental_app")
 
@@ -11,12 +12,12 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     code = "HTTP_ERROR"
     message = str(exc.detail)
     details = None
-    
+
     if isinstance(exc.detail, dict):
         code = exc.detail.get("code", code)
         message = exc.detail.get("message", message)
         details = exc.detail.get("details", None)
-        
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -39,7 +40,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "message": err.get("msg", "Invalid value"),
             "type": err.get("type", "value_error")
         })
-        
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -53,7 +54,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 async def unhandled_exception_handler(request: Request, exc: Exception):
     """Catch-all for unhandled exceptions to prevent leaking server traces."""
-    logger.error(f"Unhandled exception on {request.method} {request.url.path}: {str(exc)}", exc_info=True)
+    logger.error(f"Unhandled exception on {request.method} {request.url.path}: {exc!s}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={

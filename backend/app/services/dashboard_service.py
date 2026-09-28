@@ -1,31 +1,36 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, UTC
 from decimal import Decimal
-from typing import Optional, Dict, Any, List
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, desc
 
-from app.models.patient import Patient
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+
 from app.models.appointment import Appointment
-from app.models.treatment import TreatmentItem
 from app.models.billing import Invoice, Payment
 from app.models.followup import FollowUp
+from app.models.patient import Patient
+from app.models.treatment import TreatmentItem
 from app.schemas.dashboard import (
-    DashboardSummaryResponse, DashboardAnalyticsResponse,
-    StatusCount, ProcedureCount, RevenueTrendPoint, PatientTrendPoint
+    DashboardAnalyticsResponse,
+    DashboardSummaryResponse,
+    PatientTrendPoint,
+    ProcedureCount,
+    RevenueTrendPoint,
+    StatusCount,
 )
+
 
 class DashboardService:
     @staticmethod
     def get_summary(db: Session, period: str = "30d") -> DashboardSummaryResponse:
         today = date.today()
-        
+
         # Period start
         if period == "today":
-            period_start = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+            period_start = datetime.combine(today, datetime.min.time(), tzinfo=UTC)
         elif period == "7d":
-            period_start = datetime.combine(today - timedelta(days=7), datetime.min.time(), tzinfo=timezone.utc)
+            period_start = datetime.combine(today - timedelta(days=7), datetime.min.time(), tzinfo=UTC)
         else: # default 30d
-            period_start = datetime.combine(today - timedelta(days=30), datetime.min.time(), tzinfo=timezone.utc)
+            period_start = datetime.combine(today - timedelta(days=30), datetime.min.time(), tzinfo=UTC)
 
         # Total active patients
         total_patients = db.query(func.count(Patient.id)).filter(Patient.is_deleted == False).scalar() or 0
@@ -87,7 +92,6 @@ class DashboardService:
     @staticmethod
     def get_analytics(db: Session, days: int = 30) -> DashboardAnalyticsResponse:
         today = date.today()
-        start_date = today - timedelta(days=days)
 
         # 1. Appointments by status
         appt_stats = db.query(
@@ -114,10 +118,10 @@ class DashboardService:
         for d in range(min(days, 14)): # 14 daily buckets
             day_target = today - timedelta(days=min(days, 14) - 1 - d)
             next_day = day_target + timedelta(days=1)
-            
+
             day_rev = db.query(func.sum(Payment.amount)).filter(
-                Payment.payment_date >= datetime.combine(day_target, datetime.min.time(), tzinfo=timezone.utc),
-                Payment.payment_date < datetime.combine(next_day, datetime.min.time(), tzinfo=timezone.utc)
+                Payment.payment_date >= datetime.combine(day_target, datetime.min.time(), tzinfo=UTC),
+                Payment.payment_date < datetime.combine(next_day, datetime.min.time(), tzinfo=UTC)
             ).scalar() or Decimal('0.00')
 
             day_inv = db.query(func.sum(Invoice.total)).filter(
@@ -137,8 +141,8 @@ class DashboardService:
             next_day = day_target + timedelta(days=1)
 
             count = db.query(func.count(Patient.id)).filter(
-                Patient.created_at >= datetime.combine(day_target, datetime.min.time(), tzinfo=timezone.utc),
-                Patient.created_at < datetime.combine(next_day, datetime.min.time(), tzinfo=timezone.utc),
+                Patient.created_at >= datetime.combine(day_target, datetime.min.time(), tzinfo=UTC),
+                Patient.created_at < datetime.combine(next_day, datetime.min.time(), tzinfo=UTC),
                 Patient.is_deleted == False
             ).scalar() or 0
 

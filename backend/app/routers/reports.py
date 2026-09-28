@@ -1,19 +1,19 @@
-from typing import Optional, List, Dict, Any
 from datetime import date
-from fastapi import APIRouter, Depends, Query, Response
+
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
+from app.security.dependencies import require_roles
 from app.services.report_service import ReportService
-from app.security.dependencies import get_current_user, require_roles
 
 router = APIRouter(prefix="/reports", tags=["Reports & Exports"])
 
 @router.get("/revenue")
 def get_revenue_report(
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
     current_user: User = Depends(require_roles("admin", "receptionist")),
     db: Session = Depends(get_db)
 ):
@@ -30,8 +30,8 @@ def get_outstanding_report(
 
 @router.get("/revenue/export-csv")
 def export_revenue_csv(
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
     current_user: User = Depends(require_roles("admin", "receptionist")),
     db: Session = Depends(get_db)
 ):

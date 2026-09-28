@@ -1,7 +1,19 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey
+from datetime import datetime, UTC
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+
 from app.database import Base
+
 
 class Patient(Base):
     __tablename__ = "patients"
@@ -19,8 +31,8 @@ class Patient(Base):
     emergency_contact_phone = Column(String(50), nullable=True)
     blood_group = Column(String(10), nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     medical_history = relationship("MedicalHistory", back_populates="patient", uselist=False, cascade="all, delete-orphan")
     dental_history = relationship("DentalHistory", back_populates="patient", uselist=False, cascade="all, delete-orphan")
@@ -49,7 +61,7 @@ class MedicalHistory(Base):
     bleeding_disorders = Column(Boolean, default=False, nullable=False)
     is_pregnant = Column(Boolean, default=False, nullable=False)
     notes = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     patient = relationship("Patient", back_populates="medical_history")
 
@@ -65,6 +77,6 @@ class DentalHistory(Base):
     habits = Column(Text, nullable=True) # Smoking, Tobacco, Bruxism, Clenching
     dental_anxiety_level = Column(String(50), nullable=True) # None, Mild, Moderate, Severe
     notes = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     patient = relationship("Patient", back_populates="dental_history")

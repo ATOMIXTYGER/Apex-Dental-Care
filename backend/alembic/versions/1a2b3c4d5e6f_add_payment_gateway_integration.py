@@ -5,15 +5,17 @@ Revises: 0c4052a95382
 Create Date: 2026-09-28 10:30:00.000000
 
 """
-from typing import Sequence, Union
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
 from sqlalchemy.engine.reflection import Inspector
 
+from alembic import op
+
 revision: str = '1a2b3c4d5e6f'
-down_revision: Union[str, Sequence[str], None] = '0c4052a95382'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '0c4052a95382'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     conn = op.get_bind()

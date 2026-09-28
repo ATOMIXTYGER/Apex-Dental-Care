@@ -1,12 +1,11 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.clinical import VisitCreate, VisitUpdate, VisitResponse
-from app.services.clinical_service import ClinicalService
+from app.schemas.clinical import VisitCreate, VisitResponse, VisitUpdate
 from app.security.dependencies import get_current_user, require_roles
+from app.services.clinical_service import ClinicalService
 
 router = APIRouter(prefix="/visits", tags=["Clinical Examinations & Visits"])
 
@@ -37,7 +36,7 @@ def get_visit(
     resp.dentist_name = visit.dentist.user.full_name if visit.dentist and visit.dentist.user else None
     return resp
 
-@router.get("/patient/{patient_id}", response_model=List[VisitResponse])
+@router.get("/patient/{patient_id}", response_model=list[VisitResponse])
 def get_patient_visits(
     patient_id: int,
     current_user: User = Depends(get_current_user),

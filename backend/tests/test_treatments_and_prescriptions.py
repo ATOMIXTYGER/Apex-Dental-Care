@@ -1,4 +1,3 @@
-from decimal import Decimal
 
 def test_create_treatment_plan_and_items(client, dentist_token):
     payload = {

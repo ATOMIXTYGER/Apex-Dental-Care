@@ -1,20 +1,20 @@
-from typing import Optional, List
-from fastapi import APIRouter, Depends, status, Request
+
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.followup import FollowUpCreate, FollowUpUpdate, FollowUpResponse
-from app.services.followup_service import FollowUpService
+from app.schemas.followup import FollowUpCreate, FollowUpResponse, FollowUpUpdate
 from app.security.dependencies import get_current_user, require_roles
+from app.services.followup_service import FollowUpService
 
 router = APIRouter(prefix="/followups", tags=["Follow-Up Management"])
 
-@router.get("", response_model=List[FollowUpResponse])
+@router.get("", response_model=list[FollowUpResponse])
 def list_followups(
-    patient_id: Optional[int] = None,
-    dentist_id: Optional[int] = None,
-    status: Optional[str] = None,
+    patient_id: int | None = None,
+    dentist_id: int | None = None,
+    status: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

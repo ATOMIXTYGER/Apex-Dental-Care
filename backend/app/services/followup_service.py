@@ -1,14 +1,13 @@
-from typing import Optional, List
-from datetime import date
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from fastapi import HTTPException, status, Request
 
+from fastapi import HTTPException, Request, status
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
 from app.models.followup import FollowUp
 from app.models.patient import Patient
 from app.models.user import Dentist, User
 from app.schemas.followup import FollowUpCreate, FollowUpUpdate
-from app.audit.service import log_audit_event
+
 
 class FollowUpService:
     @staticmethod
@@ -16,7 +15,7 @@ class FollowUpService:
         db: Session,
         data: FollowUpCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> FollowUp:
         patient = db.query(Patient).filter(Patient.id == data.patient_id, Patient.is_deleted == False).first()
         if not patient:
@@ -60,10 +59,10 @@ class FollowUpService:
     @staticmethod
     def get_followups(
         db: Session,
-        patient_id: Optional[int] = None,
-        dentist_id: Optional[int] = None,
-        status_filter: Optional[str] = None
-    ) -> List[FollowUp]:
+        patient_id: int | None = None,
+        dentist_id: int | None = None,
+        status_filter: str | None = None
+    ) -> list[FollowUp]:
         query = db.query(FollowUp)
         if patient_id:
             query = query.filter(FollowUp.patient_id == patient_id)
@@ -79,7 +78,7 @@ class FollowUpService:
         followup_id: int,
         data: FollowUpUpdate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> FollowUp:
         fu = db.query(FollowUp).filter(FollowUp.id == followup_id).first()
         if not fu:

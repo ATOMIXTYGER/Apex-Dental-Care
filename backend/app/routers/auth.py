@@ -1,16 +1,21 @@
-from typing import Optional
-from fastapi import APIRouter, Depends, status, Request, Response
+
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.schemas.auth import LoginRequest, TokenResponse, RefreshTokenRequest, PasswordChangeRequest
-from app.schemas.user import UserResponse
-from app.schemas.common import MessageResponse
-from app.services.auth_service import AuthService
-from app.security.dependencies import get_current_user
-from app.security.hashing import verify_password, hash_password
-from app.models.user import User
 from app.audit.service import log_audit_event
+from app.database import get_db
+from app.models.user import User
+from app.schemas.auth import (
+    LoginRequest,
+    PasswordChangeRequest,
+    RefreshTokenRequest,
+    TokenResponse,
+)
+from app.schemas.common import MessageResponse
+from app.schemas.user import UserResponse
+from app.security.dependencies import get_current_user
+from app.security.hashing import hash_password, verify_password
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -43,7 +48,7 @@ def login(request: Request, response: Response, payload: LoginRequest, db: Sessi
     )
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh(request: Request, response: Response, payload: Optional[RefreshTokenRequest] = None, db: Session = Depends(get_db)):
+def refresh(request: Request, response: Response, payload: RefreshTokenRequest | None = None, db: Session = Depends(get_db)):
     """Refresh expired access token using refresh token from body or cookie."""
     token = (payload.refresh_token if payload else None) or request.cookies.get("refresh_token")
     if not token:
@@ -76,7 +81,7 @@ def refresh(request: Request, response: Response, payload: Optional[RefreshToken
 def logout(
     request: Request,
     response: Response,
-    payload: Optional[RefreshTokenRequest] = None,
+    payload: RefreshTokenRequest | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
 from decimal import Decimal
+
+from pydantic import BaseModel
+
 
 class DashboardSummaryResponse(BaseModel):
     total_patients: int
@@ -31,7 +32,7 @@ class PatientTrendPoint(BaseModel):
     new_patients: int
 
 class DashboardAnalyticsResponse(BaseModel):
-    appointments_by_status: List[StatusCount]
-    treatments_by_procedure: List[ProcedureCount]
-    revenue_trend: List[RevenueTrendPoint]
-    patients_trend: List[PatientTrendPoint]
+    appointments_by_status: list[StatusCount]
+    treatments_by_procedure: list[ProcedureCount]
+    revenue_trend: list[RevenueTrendPoint]
+    patients_trend: list[PatientTrendPoint]

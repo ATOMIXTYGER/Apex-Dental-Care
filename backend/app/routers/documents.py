@@ -1,13 +1,13 @@
-from typing import Optional, List
-from fastapi import APIRouter, Depends, status, UploadFile, File, Form, Request
+
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
 from app.schemas.document import DocumentResponse
-from app.services.document_service import DocumentService
 from app.security.dependencies import get_current_user, require_roles
+from app.services.document_service import DocumentService
 
 router = APIRouter(prefix="/documents", tags=["Document & X-Ray Management"])
 
@@ -16,8 +16,8 @@ async def upload_document(
     request: Request,
     patient_id: int = Form(...),
     document_type: str = Form(...),
-    notes: Optional[str] = Form(None),
-    visit_id: Optional[int] = Form(None),
+    notes: str | None = Form(None),
+    visit_id: int | None = Form(None),
     file: UploadFile = File(...),
     current_user: User = Depends(require_roles("admin", "dentist", "receptionist")),
     db: Session = Depends(get_db)
@@ -37,9 +37,9 @@ async def upload_document(
     resp.patient_name = doc.patient.full_name if doc.patient else None
     return resp
 
-@router.get("", response_model=List[DocumentResponse])
+@router.get("", response_model=list[DocumentResponse])
 def list_documents(
-    document_type: Optional[str] = None,
+    document_type: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -52,7 +52,7 @@ def list_documents(
         result.append(resp)
     return result
 
-@router.get("/patient/{patient_id}", response_model=List[DocumentResponse])
+@router.get("/patient/{patient_id}", response_model=list[DocumentResponse])
 def get_patient_documents(
     patient_id: int,
     current_user: User = Depends(get_current_user),

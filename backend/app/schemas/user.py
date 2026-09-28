@@ -1,12 +1,13 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
 
 class DentistProfileBase(BaseModel):
     license_number: str
     specialization: str = "General Dentistry"
-    qualifications: Optional[str] = None
-    cabin_number: Optional[str] = None
+    qualifications: str | None = None
+    cabin_number: str | None = None
     is_active: bool = True
 
 class DentistProfileCreate(DentistProfileBase):
@@ -22,24 +23,24 @@ class UserBase(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     full_name: str = Field(min_length=2, max_length=150)
     role: str = Field(default="receptionist") # admin, dentist, receptionist, patient
-    phone: Optional[str] = None
+    phone: str | None = None
     is_active: bool = True
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8)
-    dentist_profile: Optional[DentistProfileCreate] = None
+    dentist_profile: DentistProfileCreate | None = None
 
 class UserUpdate(BaseModel):
-    email: Optional[EmailStr] = None
-    full_name: Optional[str] = None
-    phone: Optional[str] = None
-    role: Optional[str] = None
-    is_active: Optional[bool] = None
-    password: Optional[str] = Field(default=None, min_length=8)
-    dentist_profile: Optional[DentistProfileCreate] = None
+    email: EmailStr | None = None
+    full_name: str | None = None
+    phone: str | None = None
+    role: str | None = None
+    is_active: bool | None = None
+    password: str | None = Field(default=None, min_length=8)
+    dentist_profile: DentistProfileCreate | None = None
 
 class UserResponse(UserBase):
     id: int
     created_at: datetime
-    dentist_profile: Optional[DentistProfileResponse] = None
+    dentist_profile: DentistProfileResponse | None = None
     model_config = ConfigDict(from_attributes=True)

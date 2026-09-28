@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+
 def test_list_appointments(client, receptionist_token):
     res = client.get("/api/v1/appointments", headers={"Authorization": f"Bearer {receptionist_token}"})
     assert res.status_code == 200
@@ -8,7 +9,7 @@ def test_list_appointments(client, receptionist_token):
 
 def test_create_appointment_and_conflict_detection(client, receptionist_token):
     target_date = (date.today() + timedelta(days=20)).isoformat()
-    
+
     # 1. Schedule appointment 10:00 - 10:45 with dentist 1
     res1 = client.post("/api/v1/appointments", json={
         "patient_id": 1,

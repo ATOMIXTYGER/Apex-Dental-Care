@@ -1,14 +1,13 @@
-import hmac
 import hashlib
+import hmac
 import json
 from datetime import date, timedelta
-from decimal import Decimal
-import pytest
 
 from app.config import settings
 
+
 def _generate_signature(order_id: str, payment_id: str, secret: str = settings.PAYMENT_KEY_SECRET) -> str:
-    msg = f"{order_id}|{payment_id}".encode("utf-8")
+    msg = f"{order_id}|{payment_id}".encode()
     return hmac.new(secret.encode("utf-8"), msg, hashlib.sha256).hexdigest()
 
 def _generate_webhook_signature(raw_body: bytes, secret: str = settings.PAYMENT_WEBHOOK_SECRET) -> str:

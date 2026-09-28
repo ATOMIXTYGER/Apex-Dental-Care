@@ -1,29 +1,71 @@
-from app.schemas.common import ErrorResponse, ErrorDetail, PaginatedResponse, MessageResponse
-from app.schemas.auth import LoginRequest, TokenResponse, RefreshTokenRequest, PasswordChangeRequest
-from app.schemas.user import UserCreate, UserUpdate, UserResponse, DentistProfileCreate, DentistProfileResponse
-from app.schemas.patient import (
-    PatientCreate, PatientUpdate, PatientListItem, PatientDetailResponse,
-    MedicalHistoryBase, MedicalHistoryResponse, DentalHistoryBase, DentalHistoryResponse
-)
 from app.schemas.appointment import (
-    AppointmentCreate, AppointmentUpdate, AppointmentStatusUpdate, AppointmentResponse, AppointmentTypeResponse
+    AppointmentCreate,
+    AppointmentResponse,
+    AppointmentStatusUpdate,
+    AppointmentTypeResponse,
+    AppointmentUpdate,
 )
-from app.schemas.clinical import VisitCreate, VisitUpdate, VisitResponse
-from app.schemas.dental_chart import (
-    ToothConditionUpdate, ToothConditionResponse, ToothHistoryResponse, DentalChartDetailResponse
-)
-from app.schemas.treatment import (
-    TreatmentPlanCreate, TreatmentPlanUpdate, TreatmentPlanResponse,
-    TreatmentItemCreate, TreatmentItemUpdate, TreatmentItemResponse, ProcedureCatalogResponse
-)
-from app.schemas.prescription import (
-    PrescriptionCreate, PrescriptionResponse, PrescriptionItemCreate, PrescriptionItemResponse, MedicineCatalogResponse
+from app.schemas.audit import AuditLogResponse
+from app.schemas.auth import (
+    LoginRequest,
+    PasswordChangeRequest,
+    RefreshTokenRequest,
+    TokenResponse,
 )
 from app.schemas.billing import (
-    InvoiceCreate, InvoiceResponse, InvoiceItemCreate, InvoiceItemResponse,
-    PaymentCreate, PaymentResponse
+    InvoiceCreate,
+    InvoiceItemCreate,
+    InvoiceItemResponse,
+    InvoiceResponse,
+    PaymentCreate,
+    PaymentResponse,
+)
+from app.schemas.clinical import VisitCreate, VisitResponse, VisitUpdate
+from app.schemas.common import (
+    ErrorDetail,
+    ErrorResponse,
+    MessageResponse,
+    PaginatedResponse,
+)
+from app.schemas.dashboard import DashboardAnalyticsResponse, DashboardSummaryResponse
+from app.schemas.dental_chart import (
+    DentalChartDetailResponse,
+    ToothConditionResponse,
+    ToothConditionUpdate,
+    ToothHistoryResponse,
 )
 from app.schemas.document import DocumentResponse, DocumentUpdate
-from app.schemas.followup import FollowUpCreate, FollowUpUpdate, FollowUpResponse
-from app.schemas.dashboard import DashboardSummaryResponse, DashboardAnalyticsResponse
-from app.schemas.audit import AuditLogResponse
+from app.schemas.followup import FollowUpCreate, FollowUpResponse, FollowUpUpdate
+from app.schemas.patient import (
+    DentalHistoryBase,
+    DentalHistoryResponse,
+    MedicalHistoryBase,
+    MedicalHistoryResponse,
+    PatientCreate,
+    PatientDetailResponse,
+    PatientListItem,
+    PatientUpdate,
+)
+from app.schemas.prescription import (
+    MedicineCatalogResponse,
+    PrescriptionCreate,
+    PrescriptionItemCreate,
+    PrescriptionItemResponse,
+    PrescriptionResponse,
+)
+from app.schemas.treatment import (
+    ProcedureCatalogResponse,
+    TreatmentItemCreate,
+    TreatmentItemResponse,
+    TreatmentItemUpdate,
+    TreatmentPlanCreate,
+    TreatmentPlanResponse,
+    TreatmentPlanUpdate,
+)
+from app.schemas.user import (
+    DentistProfileCreate,
+    DentistProfileResponse,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)

@@ -1,14 +1,16 @@
-from typing import Optional, List
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
 from app.schemas.dental_chart import (
-    ToothConditionUpdate, ToothConditionResponse, ToothHistoryResponse, DentalChartDetailResponse
+    DentalChartDetailResponse,
+    ToothConditionResponse,
+    ToothConditionUpdate,
+    ToothHistoryResponse,
 )
-from app.services.dental_service import DentalChartService
 from app.security.dependencies import get_current_user, require_roles
+from app.services.dental_service import DentalChartService
 
 router = APIRouter(prefix="/dental-chart", tags=["FDI Dental Chart"])
 
@@ -42,7 +44,7 @@ def update_tooth_condition(
     )
     return ToothConditionResponse.model_validate(cond)
 
-@router.get("/{patient_id}/tooth/{tooth_number}/history", response_model=List[ToothHistoryResponse])
+@router.get("/{patient_id}/tooth/{tooth_number}/history", response_model=list[ToothHistoryResponse])
 def get_tooth_history(
     patient_id: int,
     tooth_number: int,

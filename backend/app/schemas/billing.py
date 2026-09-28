@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
 from datetime import date, datetime
 from decimal import Decimal
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class InvoiceItemCreate(BaseModel):
     description: str
@@ -19,24 +20,24 @@ class InvoiceItemResponse(BaseModel):
 
 class InvoiceCreate(BaseModel):
     patient_id: int
-    visit_id: Optional[int] = None
-    treatment_plan_id: Optional[int] = None
+    visit_id: int | None = None
+    treatment_plan_id: int | None = None
     due_date: date
     discount: Decimal = Field(default=Decimal('0.00'), ge=0)
     tax: Decimal = Field(default=Decimal('0.00'), ge=0)
-    notes: Optional[str] = None
-    items: List[InvoiceItemCreate] = Field(min_length=1)
+    notes: str | None = None
+    items: list[InvoiceItemCreate] = Field(min_length=1)
 
 class PaymentCreate(BaseModel):
     invoice_id: int
     amount: Decimal = Field(gt=Decimal('0.00'))
     payment_method: str = Field(pattern="^(cash|card|upi|bank_transfer|other)$")
-    transaction_reference: Optional[str] = None
-    notes: Optional[str] = None
+    transaction_reference: str | None = None
+    notes: str | None = None
 
 class PaymentOrderCreate(BaseModel):
-    amount: Optional[Decimal] = Field(default=None, gt=Decimal('0.00'))
-    idempotency_key: Optional[str] = Field(default=None, max_length=100)
+    amount: Decimal | None = Field(default=None, gt=Decimal('0.00'))
+    idempotency_key: str | None = Field(default=None, max_length=100)
 
 class PaymentOrderResponse(BaseModel):
     order_id: str
@@ -48,8 +49,8 @@ class PaymentOrderResponse(BaseModel):
     provider: str
     clinic_name: str
     patient_name: str
-    patient_email: Optional[str] = None
-    patient_phone: Optional[str] = None
+    patient_email: str | None = None
+    patient_phone: str | None = None
     is_test_mode: bool
     notes: dict = {}
 
@@ -72,8 +73,8 @@ class PaymentVerifyResponse(BaseModel):
     receipt_url: str
 
 class PaymentRefundRequest(BaseModel):
-    amount: Optional[Decimal] = Field(default=None, gt=Decimal('0.00'))
-    reason: Optional[str] = None
+    amount: Decimal | None = Field(default=None, gt=Decimal('0.00'))
+    reason: str | None = None
 
 class PaymentResponse(BaseModel):
     id: int
@@ -84,20 +85,20 @@ class PaymentResponse(BaseModel):
     payment_method: str
     status: str = "SUCCESS"
     provider: str = "manual"
-    provider_order_id: Optional[str] = None
-    provider_payment_id: Optional[str] = None
-    transaction_reference: Optional[str] = None
+    provider_order_id: str | None = None
+    provider_payment_id: str | None = None
+    transaction_reference: str | None = None
     payment_date: datetime
-    notes: Optional[str] = None
-    received_by_user_id: Optional[int] = None
+    notes: str | None = None
+    received_by_user_id: int | None = None
     model_config = ConfigDict(from_attributes=True)
 
 class InvoiceResponse(BaseModel):
     id: int
     invoice_number: str
     patient_id: int
-    visit_id: Optional[int] = None
-    treatment_plan_id: Optional[int] = None
+    visit_id: int | None = None
+    treatment_plan_id: int | None = None
     issue_date: date
     due_date: date
     subtotal: Decimal
@@ -107,9 +108,9 @@ class InvoiceResponse(BaseModel):
     paid_amount: Decimal
     balance: Decimal
     status: str
-    notes: Optional[str] = None
+    notes: str | None = None
     created_at: datetime
-    patient_name: Optional[str] = None
-    items: List[InvoiceItemResponse] = []
-    payments: List[PaymentResponse] = []
+    patient_name: str | None = None
+    items: list[InvoiceItemResponse] = []
+    payments: list[PaymentResponse] = []
     model_config = ConfigDict(from_attributes=True)

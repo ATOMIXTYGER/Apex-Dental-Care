@@ -1,5 +1,6 @@
 import bcrypt
 
+
 def hash_password(password: str) -> str:
     """Hash a plaintext password using bcrypt with salt."""
     salt = bcrypt.gensalt(rounds=12)

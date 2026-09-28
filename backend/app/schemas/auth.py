@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
-from datetime import datetime
+
+from pydantic import BaseModel, Field
+
 
 class LoginRequest(BaseModel):
     username_or_email: str
@@ -9,7 +9,7 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
     expires_in: int
     user: "UserResponse"
 
@@ -20,5 +20,6 @@ class PasswordChangeRequest(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8)
 
-from app.schemas.user import UserResponse
+from app.schemas.user import UserResponse  # noqa: E402
+
 TokenResponse.model_rebuild()

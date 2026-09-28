@@ -1,12 +1,14 @@
-from typing import Optional, Dict, Any, Tuple, List
-from sqlalchemy.orm import Session
-from sqlalchemy import or_, desc, func
-from fastapi import HTTPException, status, Request
+from typing import Any
 
-from app.models.patient import Patient, MedicalHistory, DentalHistory
+from fastapi import HTTPException, Request, status
+from sqlalchemy import desc, func, or_
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
+from app.models.patient import DentalHistory, MedicalHistory, Patient
 from app.models.user import User
 from app.schemas.patient import PatientCreate, PatientUpdate
-from app.audit.service import log_audit_event
+
 
 class PatientService:
     @staticmethod
@@ -21,7 +23,7 @@ class PatientService:
         db: Session,
         data: PatientCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Patient:
         """Register a new patient along with optional medical and dental histories in one transaction."""
         patient_code = cls._generate_patient_code(db)
@@ -103,8 +105,8 @@ class PatientService:
         db: Session,
         page: int = 1,
         page_size: int = 20,
-        search: Optional[str] = None
-    ) -> Tuple[List[Patient], int]:
+        search: str | None = None
+    ) -> tuple[list[Patient], int]:
         """Search and paginate patients (by code, first/last name, phone)."""
         query = db.query(Patient).filter(Patient.is_deleted == False)
 
@@ -140,7 +142,7 @@ class PatientService:
         patient_id: int,
         data: PatientUpdate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Patient:
         """Update patient demographics or medical/dental history."""
         patient = PatientService.get_patient_by_id(db, patient_id)
@@ -186,7 +188,7 @@ class PatientService:
         db: Session,
         patient_id: int,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ):
         """Soft delete patient to preserve clinical records."""
         patient = PatientService.get_patient_by_id(db, patient_id)
@@ -204,7 +206,7 @@ class PatientService:
         )
 
     @staticmethod
-    def get_patient_timeline(db: Session, patient_id: int) -> List[Dict[str, Any]]:
+    def get_patient_timeline(db: Session, patient_id: int) -> list[dict[str, Any]]:
         """Consolidate timeline of events across visits, treatments, prescriptions, and appointments."""
         patient = PatientService.get_patient_by_id(db, patient_id)
         events = []
@@ -227,7 +229,7 @@ class PatientService:
                 "type": "visit",
                 "id": visit.id,
                 "date": visit.visit_date.isoformat(),
-                "title": f"Clinical Visit / Examination",
+                "title": "Clinical Visit / Examination",
                 "diagnosis": visit.diagnosis,
                 "notes": visit.clinical_notes,
                 "oral_findings": visit.oral_findings,

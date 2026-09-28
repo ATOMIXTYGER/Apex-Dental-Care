@@ -1,14 +1,15 @@
-from typing import Optional, List
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
-from fastapi import HTTPException, status, Request
 
-from app.models.prescription import Prescription, PrescriptionItem
-from app.models.patient import Patient
-from app.models.user import Dentist, User
-from app.schemas.prescription import PrescriptionCreate
-from app.pdf.generator import generate_prescription_pdf
+from fastapi import HTTPException, Request, status
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+
 from app.audit.service import log_audit_event
+from app.models.patient import Patient
+from app.models.prescription import Prescription, PrescriptionItem
+from app.models.user import Dentist, User
+from app.pdf.generator import generate_prescription_pdf
+from app.schemas.prescription import PrescriptionCreate
+
 
 class PrescriptionService:
     @staticmethod
@@ -22,7 +23,7 @@ class PrescriptionService:
         db: Session,
         data: PrescriptionCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Prescription:
         patient = db.query(Patient).filter(Patient.id == data.patient_id, Patient.is_deleted == False).first()
         if not patient:
@@ -80,9 +81,9 @@ class PrescriptionService:
     @staticmethod
     def get_prescriptions(
         db: Session,
-        patient_id: Optional[int] = None,
-        dentist_id: Optional[int] = None
-    ) -> List[Prescription]:
+        patient_id: int | None = None,
+        dentist_id: int | None = None
+    ) -> list[Prescription]:
         query = db.query(Prescription)
         if patient_id:
             query = query.filter(Prescription.patient_id == patient_id)

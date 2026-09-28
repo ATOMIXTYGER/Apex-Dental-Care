@@ -1,56 +1,56 @@
-from enum import Enum
-from typing import Set
+from enum import StrEnum
 
-class Role(str, Enum):
+
+class Role(StrEnum):
     ADMIN = "admin"
     DENTIST = "dentist"
     RECEPTIONIST = "receptionist"
     PATIENT = "patient"
 
 # Specific permission strings
-class Permission(str, Enum):
+class Permission(StrEnum):
     # User / System
     USER_MANAGE = "user:manage"
     SYSTEM_CONFIG = "system:config"
     AUDIT_VIEW = "audit:view"
-    
+
     # Patient
     PATIENT_READ = "patient:read"
     PATIENT_CREATE = "patient:create"
     PATIENT_UPDATE = "patient:update"
     PATIENT_DELETE = "patient:delete"
-    
+
     # Clinical
     CLINICAL_READ = "clinical:read"
     CLINICAL_CREATE = "clinical:create"
     CLINICAL_UPDATE = "clinical:update"
-    
+
     # Dental Chart
     CHART_READ = "chart:read"
     CHART_UPDATE = "chart:update"
-    
+
     # Treatment
     TREATMENT_READ = "treatment:read"
     TREATMENT_MANAGE = "treatment:manage"
-    
+
     # Prescription
     PRESCRIPTION_READ = "prescription:read"
     PRESCRIPTION_CREATE = "prescription:create"
-    
+
     # Appointments
     APPOINTMENT_READ = "appointment:read"
     APPOINTMENT_MANAGE = "appointment:manage"
-    
+
     # Billing
     BILLING_READ = "billing:read"
     BILLING_MANAGE = "billing:manage"
-    
+
     # Documents
     DOCUMENT_READ = "document:read"
     DOCUMENT_UPLOAD = "document:upload"
     DOCUMENT_DELETE = "document:delete"
 
-ROLE_PERMISSIONS: dict[Role, Set[Permission]] = {
+ROLE_PERMISSIONS: dict[Role, set[Permission]] = {
     Role.ADMIN: {
         Permission.USER_MANAGE,
         Permission.SYSTEM_CONFIG,

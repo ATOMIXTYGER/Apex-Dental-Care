@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
-from datetime import date, time, datetime
+from datetime import date, datetime, time
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class AppointmentTypeResponse(BaseModel):
     id: int
@@ -13,38 +14,38 @@ class AppointmentTypeResponse(BaseModel):
 class AppointmentBase(BaseModel):
     patient_id: int
     dentist_id: int
-    appointment_type_id: Optional[int] = None
+    appointment_type_id: int | None = None
     appointment_date: date
     start_time: time
     end_time: time
-    reason: Optional[str] = None
-    notes: Optional[str] = None
+    reason: str | None = None
+    notes: str | None = None
 
 class AppointmentCreate(AppointmentBase):
     pass
 
 class AppointmentUpdate(BaseModel):
-    dentist_id: Optional[int] = None
-    appointment_type_id: Optional[int] = None
-    appointment_date: Optional[date] = None
-    start_time: Optional[time] = None
-    end_time: Optional[time] = None
-    status: Optional[str] = None
-    reason: Optional[str] = None
-    cancellation_reason: Optional[str] = None
-    notes: Optional[str] = None
+    dentist_id: int | None = None
+    appointment_type_id: int | None = None
+    appointment_date: date | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    status: str | None = None
+    reason: str | None = None
+    cancellation_reason: str | None = None
+    notes: str | None = None
 
 class AppointmentStatusUpdate(BaseModel):
     status: str = Field(pattern="^(scheduled|confirmed|in_progress|completed|cancelled|no_show)$")
-    cancellation_reason: Optional[str] = None
+    cancellation_reason: str | None = None
 
 class AppointmentResponse(AppointmentBase):
     id: int
     status: str
-    cancellation_reason: Optional[str] = None
+    cancellation_reason: str | None = None
     created_at: datetime
-    patient_name: Optional[str] = None
-    patient_code: Optional[str] = None
-    dentist_name: Optional[str] = None
-    appointment_type_name: Optional[str] = None
+    patient_name: str | None = None
+    patient_code: str | None = None
+    dentist_name: str | None = None
+    appointment_type_name: str | None = None
     model_config = ConfigDict(from_attributes=True)

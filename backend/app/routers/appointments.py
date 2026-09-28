@@ -1,21 +1,24 @@
-from typing import Optional, List
 from datetime import date
-from fastapi import APIRouter, Depends, status, Query, Request
+
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import User
 from app.models.appointment import AppointmentType
+from app.models.user import User
 from app.schemas.appointment import (
-    AppointmentCreate, AppointmentUpdate, AppointmentStatusUpdate, AppointmentResponse, AppointmentTypeResponse
+    AppointmentCreate,
+    AppointmentResponse,
+    AppointmentStatusUpdate,
+    AppointmentTypeResponse,
+    AppointmentUpdate,
 )
-from app.schemas.common import MessageResponse
-from app.services.appointment_service import AppointmentService
 from app.security.dependencies import get_current_user, require_roles
+from app.services.appointment_service import AppointmentService
 
 router = APIRouter(prefix="/appointments", tags=["Appointment Management"])
 
-@router.get("/types", response_model=List[AppointmentTypeResponse])
+@router.get("/types", response_model=list[AppointmentTypeResponse])
 def get_appointment_types(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -24,12 +27,12 @@ def get_appointment_types(
     types = db.query(AppointmentType).all()
     return [AppointmentTypeResponse.model_validate(t) for t in types]
 
-@router.get("", response_model=List[AppointmentResponse])
+@router.get("", response_model=list[AppointmentResponse])
 def list_appointments(
-    appointment_date: Optional[date] = None,
-    dentist_id: Optional[int] = None,
-    patient_id: Optional[int] = None,
-    status: Optional[str] = None,
+    appointment_date: date | None = None,
+    dentist_id: int | None = None,
+    patient_id: int | None = None,
+    status: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

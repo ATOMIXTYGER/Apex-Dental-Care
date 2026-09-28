@@ -1,5 +1,6 @@
 from datetime import date
 
+
 def test_create_visit_examination(client, dentist_token):
     payload = {
         "patient_id": 2,

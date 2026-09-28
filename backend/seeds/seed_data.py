@@ -1,25 +1,30 @@
 import os
-import sys
-from datetime import date, datetime, timedelta, time, timezone
-from decimal import Decimal
 import random
+import sys
+from datetime import date, datetime, time, timedelta, UTC
+from decimal import Decimal
 
 # Add backend directory to sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from app.database import SessionLocal, engine, Base
-from app.models.user import User, Dentist
-from app.models.patient import Patient, MedicalHistory, DentalHistory
+from app.database import SessionLocal
 from app.models.appointment import Appointment, AppointmentType
-from app.models.clinical import Visit
-from app.models.dental_chart import ToothCondition, ToothConditionHistory, FDI_PERMANENT_TEETH
-from app.models.treatment import TreatmentPlan, TreatmentItem, ProcedureCatalog
-from app.models.prescription import Prescription, PrescriptionItem, MedicineCatalog
+from app.models.audit import AuditLog
 from app.models.billing import Invoice, InvoiceItem, Payment
+from app.models.clinical import Visit
+from app.models.dental_chart import (
+    FDI_PERMANENT_TEETH,
+    ToothCondition,
+    ToothConditionHistory,
+)
 from app.models.document import Document
 from app.models.followup import FollowUp
-from app.models.audit import AuditLog
+from app.models.patient import DentalHistory, MedicalHistory, Patient
+from app.models.prescription import MedicineCatalog, Prescription, PrescriptionItem
+from app.models.treatment import ProcedureCatalog, TreatmentItem, TreatmentPlan
+from app.models.user import Dentist, User
 from app.security.hashing import hash_password
+
 
 def seed_database(db=None):
     should_close = False
@@ -218,7 +223,7 @@ def seed_database(db=None):
             emergency_contact_phone=ec_ph,
             blood_group=bg,
             is_deleted=False,
-            created_at=datetime.now(timezone.utc) - timedelta(days=random.randint(5, 60))
+            created_at=datetime.now(UTC) - timedelta(days=random.randint(5, 60))
         )
         db.add(p)
         db.flush()
@@ -320,7 +325,6 @@ def seed_database(db=None):
     db.commit()
 
     # 7. Completed Visits & Examinations
-    visits = []
     # Visit 1: Liam Smith (tooth 16 acute irreversible pulpitis)
     v1 = Visit(
         patient_id=patient_objs[0].id,
@@ -508,7 +512,7 @@ def seed_database(db=None):
         actual_cost=Decimal('2500.00'),
         status="completed",
         visit_id=v3.id,
-        completed_at=datetime.now(timezone.utc) - timedelta(days=2),
+        completed_at=datetime.now(UTC) - timedelta(days=2),
         notes="Aesthetic restoration completed."
     )
     db.add(ti3)
@@ -592,7 +596,7 @@ def seed_database(db=None):
         amount=Decimal('4000.00'),
         payment_method="card",
         transaction_reference="AUTH-TXN-994821",
-        payment_date=datetime.now(timezone.utc) - timedelta(days=7),
+        payment_date=datetime.now(UTC) - timedelta(days=7),
         notes="Card payment swipe at front desk.",
         received_by_user_id=rec1_user.id
     )
@@ -628,7 +632,7 @@ def seed_database(db=None):
         amount=Decimal('1700.00'),
         payment_method="upi",
         transaction_reference="UPI-REF-238491",
-        payment_date=datetime.now(timezone.utc) - timedelta(days=5),
+        payment_date=datetime.now(UTC) - timedelta(days=5),
         notes="Instant mobile payment received.",
         received_by_user_id=rec1_user.id
     )
@@ -662,7 +666,7 @@ def seed_database(db=None):
         patient_id=patient_objs[3].id,
         amount=Decimal('2500.00'),
         payment_method="cash",
-        payment_date=datetime.now(timezone.utc) - timedelta(days=2),
+        payment_date=datetime.now(UTC) - timedelta(days=2),
         notes="Cash payment received in full.",
         received_by_user_id=rec2_user.id
     )
@@ -711,7 +715,7 @@ def seed_database(db=None):
             details=detail,
             ip_address="127.0.0.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) DemoSeeder/1.0",
-            created_at=datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 48))
+            created_at=datetime.now(UTC) - timedelta(hours=random.randint(1, 48))
         ))
 
     db.commit()

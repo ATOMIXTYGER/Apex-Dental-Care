@@ -1,10 +1,12 @@
 import os
 import uuid
-import aiofiles
 from pathlib import Path
-from typing import Tuple
-from fastapi import UploadFile, HTTPException, status
+
+import aiofiles
+from fastapi import HTTPException, UploadFile, status
+
 from app.config import settings
+
 
 class FileStorageService:
     def __init__(self, upload_dir: str = settings.UPLOAD_DIR):
@@ -12,7 +14,7 @@ class FileStorageService:
         self.upload_dir.mkdir(parents=True, exist_ok=True)
         self.max_size = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024 # Convert MB to Bytes
 
-    async def save_file(self, file: UploadFile) -> Tuple[str, str, int, str]:
+    async def save_file(self, file: UploadFile) -> tuple[str, str, int, str]:
         """
         Validate and save an uploaded file securely.
         Returns: (stored_filename, original_filename, file_size, mime_type)
@@ -37,16 +39,16 @@ class FileStorageService:
 
         # Validate MIME type
         content_type = file.content_type or ""
-        if content_type not in settings.ALLOWED_MIME_TYPES:
-            # Fallback check for standard image/pdf
-            if not (content_type.startswith("image/") or content_type == "application/pdf"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={
-                        "code": "INVALID_MIME_TYPE",
-                        "message": f"File type '{content_type}' is not supported."
-                    }
-                )
+        if content_type not in settings.ALLOWED_MIME_TYPES and not (
+            content_type.startswith("image/") or content_type == "application/pdf"
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "INVALID_MIME_TYPE",
+                    "message": f"File type '{content_type}' is not supported."
+                }
+            )
 
         # Generate secure unique server filename
         unique_name = f"{uuid.uuid4().hex}_{int(os.times().system * 1000)}.{file_ext}"
@@ -62,7 +64,7 @@ class FileStorageService:
         # Stream write with size limit checking
         size = 0
         chunk_size = 1024 * 1024 # 1MB chunks
-        
+
         async with aiofiles.open(destination, 'wb') as out_file:
             while chunk := await file.read(chunk_size):
                 size += len(chunk)

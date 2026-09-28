@@ -1,14 +1,15 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional, List, Dict
 from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 
 class ToothConditionUpdate(BaseModel):
     tooth_number: int
     condition: str = Field(pattern="^(healthy|caries|missing|filled|crown|root_canal|extraction|fracture|sensitivity|mobility|bridge|implant|impacted|other)$")
-    severity: Optional[str] = "none" # none, mild, moderate, severe
-    surfaces: Optional[str] = None # e.g. "O", "MO", "MOD", "B", "L"
-    notes: Optional[str] = None
-    visit_id: Optional[int] = None
+    severity: str | None = "none" # none, mild, moderate, severe
+    surfaces: str | None = None # e.g. "O", "MO", "MOD", "B", "L"
+    notes: str | None = None
+    visit_id: int | None = None
 
     @field_validator("tooth_number")
     @classmethod
@@ -25,27 +26,27 @@ class ToothConditionResponse(BaseModel):
     patient_id: int
     tooth_number: int
     current_condition: str
-    severity: Optional[str] = None
-    surfaces: Optional[str] = None
-    notes: Optional[str] = None
+    severity: str | None = None
+    surfaces: str | None = None
+    notes: str | None = None
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
 class ToothHistoryResponse(BaseModel):
     id: int
     patient_id: int
-    visit_id: Optional[int] = None
+    visit_id: int | None = None
     dentist_id: int
-    dentist_name: Optional[str] = None
+    dentist_name: str | None = None
     tooth_number: int
     condition: str
-    severity: Optional[str] = None
-    surfaces: Optional[str] = None
-    notes: Optional[str] = None
+    severity: str | None = None
+    surfaces: str | None = None
+    notes: str | None = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
 class DentalChartDetailResponse(BaseModel):
     patient_id: int
-    teeth: Dict[int, ToothConditionResponse]
-    history: List[ToothHistoryResponse]
+    teeth: dict[int, ToothConditionResponse]
+    history: list[ToothHistoryResponse]

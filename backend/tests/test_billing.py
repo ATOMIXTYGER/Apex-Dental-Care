@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from decimal import Decimal
+
 
 def test_invoice_creation_and_balance(client, receptionist_token):
     due = (date.today() + timedelta(days=14)).isoformat()

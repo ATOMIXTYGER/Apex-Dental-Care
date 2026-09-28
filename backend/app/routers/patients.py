@@ -1,16 +1,20 @@
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, status, Query, Request
+from typing import Any
+
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
 
+from app.audit.service import log_audit_event
 from app.database import get_db
 from app.models.user import User
+from app.schemas.common import MessageResponse, PaginatedResponse
 from app.schemas.patient import (
-    PatientCreate, PatientUpdate, PatientListItem, PatientDetailResponse
+    PatientCreate,
+    PatientDetailResponse,
+    PatientListItem,
+    PatientUpdate,
 )
-from app.schemas.common import PaginatedResponse, MessageResponse
-from app.services.patient_service import PatientService
 from app.security.dependencies import get_current_user, require_roles
-from app.audit.service import log_audit_event
+from app.services.patient_service import PatientService
 
 router = APIRouter(prefix="/patients", tags=["Patient Management"])
 
@@ -18,7 +22,7 @@ router = APIRouter(prefix="/patients", tags=["Patient Management"])
 def list_patients(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    search: Optional[str] = None,
+    search: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -91,7 +95,7 @@ def delete_patient(
     PatientService.soft_delete_patient(db, patient_id=patient_id, current_user=current_user, request=request)
     return MessageResponse(message=f"Patient {patient_id} successfully archived.")
 
-@router.get("/{patient_id}/timeline", response_model=List[Dict[str, Any]])
+@router.get("/{patient_id}/timeline", response_model=list[dict[str, Any]])
 def get_patient_timeline(
     patient_id: int,
     current_user: User = Depends(get_current_user),

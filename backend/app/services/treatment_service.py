@@ -1,17 +1,20 @@
+from datetime import datetime, UTC
 from decimal import Decimal
-from datetime import datetime, timezone
-from typing import Optional, List
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from fastapi import HTTPException, status, Request
 
-from app.models.treatment import TreatmentPlan, TreatmentItem, ProcedureCatalog
+from fastapi import HTTPException, Request, status
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
 from app.models.patient import Patient
+from app.models.treatment import TreatmentItem, TreatmentPlan
 from app.models.user import Dentist, User
 from app.schemas.treatment import (
-    TreatmentPlanCreate, TreatmentPlanUpdate, TreatmentItemCreate, TreatmentItemUpdate
+    TreatmentItemCreate,
+    TreatmentItemUpdate,
+    TreatmentPlanCreate,
 )
-from app.audit.service import log_audit_event
+
 
 class TreatmentService:
     @staticmethod
@@ -31,7 +34,7 @@ class TreatmentService:
         db: Session,
         data: TreatmentPlanCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> TreatmentPlan:
         """Create a treatment plan with multiple treatment items."""
         patient = db.query(Patient).filter(Patient.id == data.patient_id, Patient.is_deleted == False).first()
@@ -92,10 +95,10 @@ class TreatmentService:
     @staticmethod
     def get_plans(
         db: Session,
-        patient_id: Optional[int] = None,
-        dentist_id: Optional[int] = None,
-        status_filter: Optional[str] = None
-    ) -> List[TreatmentPlan]:
+        patient_id: int | None = None,
+        dentist_id: int | None = None,
+        status_filter: str | None = None
+    ) -> list[TreatmentPlan]:
         query = db.query(TreatmentPlan)
         if patient_id:
             query = query.filter(TreatmentPlan.patient_id == patient_id)
@@ -122,7 +125,7 @@ class TreatmentService:
         plan_id: int,
         data: TreatmentItemCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> TreatmentItem:
         plan = cls.get_plan_by_id(db, plan_id)
         item = TreatmentItem(
@@ -159,7 +162,7 @@ class TreatmentService:
         item_id: int,
         data: TreatmentItemUpdate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> TreatmentItem:
         item = db.query(TreatmentItem).filter(TreatmentItem.id == item_id).first()
         if not item:
@@ -170,7 +173,7 @@ class TreatmentService:
 
         update_dict = data.model_dump(exclude_unset=True)
         if data.status == "completed" and item.status != "completed":
-            item.completed_at = datetime.now(timezone.utc)
+            item.completed_at = datetime.now(UTC)
 
         for k, v in update_dict.items():
             setattr(item, k, v)

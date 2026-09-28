@@ -1,18 +1,19 @@
-from pydantic import BaseModel, Field
-from typing import Generic, TypeVar, List, Optional, Any, Dict
+from typing import Any, Generic, TypeVar
+
+from pydantic import BaseModel
 
 T = TypeVar("T")
 
 class ErrorDetail(BaseModel):
     code: str
     message: str
-    details: Optional[Dict[str, Any]] = None
+    details: dict[str, Any] | None = None
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
 
 class PaginatedResponse(BaseModel, Generic[T]):
-    items: List[T]
+    items: list[T]
     total: int
     page: int
     page_size: int
@@ -21,4 +22,4 @@ class PaginatedResponse(BaseModel, Generic[T]):
 class MessageResponse(BaseModel):
     message: str
     success: bool = True
-    data: Optional[Any] = None
+    data: Any | None = None

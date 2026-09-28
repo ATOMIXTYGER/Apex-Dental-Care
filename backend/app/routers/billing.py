@@ -1,5 +1,4 @@
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, status, Response, Request, Header
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -8,22 +7,22 @@ from app.schemas.billing import (
     InvoiceCreate,
     InvoiceResponse,
     PaymentCreate,
-    PaymentResponse,
     PaymentOrderCreate,
     PaymentOrderResponse,
+    PaymentRefundRequest,
+    PaymentResponse,
     PaymentVerifyRequest,
     PaymentVerifyResponse,
-    PaymentRefundRequest,
 )
-from app.services.billing_service import BillingService
 from app.security.dependencies import get_current_user, require_roles
+from app.services.billing_service import BillingService
 
 router = APIRouter(prefix="/billing", tags=["Billing & Payments"])
 
-@router.get("/invoices", response_model=List[InvoiceResponse])
+@router.get("/invoices", response_model=list[InvoiceResponse])
 def list_invoices(
-    patient_id: Optional[int] = None,
-    status: Optional[str] = None,
+    patient_id: int | None = None,
+    status: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -99,7 +98,7 @@ def record_payment(
 def create_payment_order(
     invoice_id: int,
     request: Request,
-    payload: Optional[PaymentOrderCreate] = None,
+    payload: PaymentOrderCreate | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

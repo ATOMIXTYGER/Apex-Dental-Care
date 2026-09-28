@@ -1,18 +1,27 @@
-from typing import Dict, List, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from fastapi import HTTPException, status, Request
 
-from app.models.dental_chart import ToothCondition, ToothConditionHistory, FDI_PERMANENT_TEETH
+from fastapi import HTTPException, Request, status
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
+from app.models.dental_chart import (
+    FDI_PERMANENT_TEETH,
+    ToothCondition,
+    ToothConditionHistory,
+)
 from app.models.patient import Patient
 from app.models.user import Dentist, User
-from app.models.treatment import TreatmentItem
-from app.schemas.dental_chart import ToothConditionUpdate, ToothConditionResponse, ToothHistoryResponse, DentalChartDetailResponse
-from app.audit.service import log_audit_event
+from app.schemas.dental_chart import (
+    DentalChartDetailResponse,
+    ToothConditionResponse,
+    ToothConditionUpdate,
+    ToothHistoryResponse,
+)
+
 
 class DentalChartService:
     @staticmethod
-    def get_or_create_patient_chart(db: Session, patient_id: int) -> Dict[int, ToothCondition]:
+    def get_or_create_patient_chart(db: Session, patient_id: int) -> dict[int, ToothCondition]:
         """
         Retrieve all 32 permanent teeth conditions for a patient.
         If a tooth condition record doesn't exist yet, it's lazily or initially populated as 'healthy'.
@@ -54,7 +63,7 @@ class DentalChartService:
         patient_id: int,
         data: ToothConditionUpdate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> ToothCondition:
         """
         Update the current condition of a tooth and log an immutable history snapshot.
@@ -132,7 +141,7 @@ class DentalChartService:
         return tooth_cond
 
     @staticmethod
-    def get_tooth_history(db: Session, patient_id: int, tooth_number: Optional[int] = None) -> List[ToothConditionHistory]:
+    def get_tooth_history(db: Session, patient_id: int, tooth_number: int | None = None) -> list[ToothConditionHistory]:
         """Fetch history entries for a specific tooth or all teeth of a patient."""
         query = db.query(ToothConditionHistory).filter(ToothConditionHistory.patient_id == patient_id)
         if tooth_number:

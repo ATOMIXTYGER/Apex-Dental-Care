@@ -1,14 +1,18 @@
-from datetime import date, time, datetime
-from typing import Optional, List, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc
-from fastapi import HTTPException, status, Request
+from datetime import date, time
 
-from app.models.appointment import Appointment, AppointmentType
+from fastapi import HTTPException, Request, status
+from sqlalchemy.orm import Session
+
+from app.audit.service import log_audit_event
+from app.models.appointment import Appointment
 from app.models.patient import Patient
 from app.models.user import Dentist, User
-from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentStatusUpdate
-from app.audit.service import log_audit_event
+from app.schemas.appointment import (
+    AppointmentCreate,
+    AppointmentStatusUpdate,
+    AppointmentUpdate,
+)
+
 
 class AppointmentService:
     @staticmethod
@@ -18,7 +22,7 @@ class AppointmentService:
         appointment_date: date,
         start_time: time,
         end_time: time,
-        exclude_id: Optional[int] = None
+        exclude_id: int | None = None
     ) -> bool:
         """
         Check if the dentist has any active overlapping appointment.
@@ -33,7 +37,7 @@ class AppointmentService:
         )
         if exclude_id:
             query = query.filter(Appointment.id != exclude_id)
-            
+
         return query.first() is not None
 
     @classmethod
@@ -42,7 +46,7 @@ class AppointmentService:
         db: Session,
         data: AppointmentCreate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Appointment:
         """Create a new appointment with strict validation and conflict prevention."""
         # Validate patient
@@ -108,11 +112,11 @@ class AppointmentService:
     @staticmethod
     def get_appointments(
         db: Session,
-        appointment_date: Optional[date] = None,
-        dentist_id: Optional[int] = None,
-        patient_id: Optional[int] = None,
-        status: Optional[str] = None
-    ) -> List[Appointment]:
+        appointment_date: date | None = None,
+        dentist_id: int | None = None,
+        patient_id: int | None = None,
+        status: str | None = None
+    ) -> list[Appointment]:
         """Fetch appointments with optional date, dentist, patient, and status filters."""
         query = db.query(Appointment)
         if appointment_date:
@@ -143,7 +147,7 @@ class AppointmentService:
         appointment_id: int,
         data: AppointmentUpdate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Appointment:
         """Update appointment details or reschedule with conflict validation."""
         appt = cls.get_appointment_by_id(db, appointment_id)
@@ -191,7 +195,7 @@ class AppointmentService:
         appointment_id: int,
         data: AppointmentStatusUpdate,
         current_user: User,
-        request: Optional[Request] = None
+        request: Request | None = None
     ) -> Appointment:
         """Transition status of an appointment (e.g. confirm, cancel, complete, no-show)."""
         appt = cls.get_appointment_by_id(db, appointment_id)

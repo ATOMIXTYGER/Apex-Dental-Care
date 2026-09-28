@@ -1,7 +1,10 @@
-from sqlalchemy import Column, Integer, String, Date, Time, DateTime, ForeignKey, Text
+from datetime import datetime, UTC
+
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+
 from app.database import Base
+
 
 class AppointmentType(Base):
     __tablename__ = "appointment_types"
@@ -28,8 +31,8 @@ class Appointment(Base):
     reason = Column(String(255), nullable=True)
     cancellation_reason = Column(String(255), nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
 
     patient = relationship("Patient", back_populates="appointments")
     dentist = relationship("Dentist", back_populates="appointments")

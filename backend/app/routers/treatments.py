@@ -1,20 +1,24 @@
-from typing import Optional, List
-from fastapi import APIRouter, Depends, status, Request
+
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import User
 from app.models.treatment import ProcedureCatalog
+from app.models.user import User
 from app.schemas.treatment import (
-    TreatmentPlanCreate, TreatmentPlanUpdate, TreatmentPlanResponse,
-    TreatmentItemCreate, TreatmentItemUpdate, TreatmentItemResponse, ProcedureCatalogResponse
+    ProcedureCatalogResponse,
+    TreatmentItemCreate,
+    TreatmentItemResponse,
+    TreatmentItemUpdate,
+    TreatmentPlanCreate,
+    TreatmentPlanResponse,
 )
-from app.services.treatment_service import TreatmentService
 from app.security.dependencies import get_current_user, require_roles
+from app.services.treatment_service import TreatmentService
 
 router = APIRouter(prefix="/treatments", tags=["Treatment Management"])
 
-@router.get("/catalog", response_model=List[ProcedureCatalogResponse])
+@router.get("/catalog", response_model=list[ProcedureCatalogResponse])
 def get_procedure_catalog(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -23,11 +27,11 @@ def get_procedure_catalog(
     catalog = db.query(ProcedureCatalog).order_by(ProcedureCatalog.category, ProcedureCatalog.name).all()
     return [ProcedureCatalogResponse.model_validate(c) for c in catalog]
 
-@router.get("/plans", response_model=List[TreatmentPlanResponse])
+@router.get("/plans", response_model=list[TreatmentPlanResponse])
 def list_treatment_plans(
-    patient_id: Optional[int] = None,
-    dentist_id: Optional[int] = None,
-    status: Optional[str] = None,
+    patient_id: int | None = None,
+    dentist_id: int | None = None,
+    status: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
